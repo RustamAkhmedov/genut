@@ -172,11 +172,11 @@ ok "Node-Pakete installiert"
 titel "Konfiguration"
 if [ ! -f config.toml ]; then
   cp "versionen/$VERSION.toml" config.toml
-  ok "config.toml für die Version „$VERSION“ angelegt"
+  ok "config.toml für die Version „${VERSION}“ angelegt"
 else
   SOLL="$(sed -n 's/^standard *= *"\([a-z_]*\)".*/\1/p' "versionen/$VERSION.toml" | head -n 1)"
   if [ "$(std_aus_config)" != "$SOLL" ]; then
-    if frage "config.toml ist für eine andere Version eingestellt. Auf „$VERSION“ umstellen (alte Datei → config.toml.bak)?"; then
+    if frage "config.toml ist für eine andere Version eingestellt. Auf „${VERSION}“ umstellen (alte Datei → config.toml.bak)?"; then
       cp config.toml config.toml.bak && cp "versionen/$VERSION.toml" config.toml && ok "config.toml umgestellt"
     else warn "config.toml bleibt unverändert"; fi
   else
@@ -202,7 +202,7 @@ claude)
       # nicht im PATH → vollen Pfad in config.toml eintragen
       CL="$CL" .venv/bin/python -c 'import os, re, pathlib; p = pathlib.Path("config.toml"); p.write_text(re.sub(r"(?m)^befehl = \"claude\"", "befehl = \"" + os.environ["CL"] + "\"", p.read_text()))'
     fi
-    warn "Melde dich einmal mit deinem Claude-Konto an (Pro oder höher): im Terminal „$CL“ starten, Anmeldung durchführen, mit /exit beenden."
+    warn "Melde dich einmal mit deinem Claude-Konto an (Pro oder höher): im Terminal „${CL}“ starten, Anmeldung durchführen, mit /exit beenden."
     if [ "$INTERAKTIV" = 1 ] && frage "Claude jetzt zum Anmelden starten?"; then "$CL" < /dev/tty || true; fi
   else
     warn "Ohne Claude Code funktioniert diese Version nicht. Anleitung: https://claude.com/claude-code"
@@ -276,7 +276,7 @@ lokal)
   elif frage "Modell $MODELL herunterladen (ca. 3 GB)?"; then
     ollama pull "$MODELL" && ok "Modell $MODELL geladen"
   else
-    warn "Ohne Modell geht es nicht: später „ollama pull $MODELL“ ausführen."
+    warn "Ohne Modell geht es nicht: später „ollama pull ${MODELL}“ ausführen."
   fi
   ;;
 esac

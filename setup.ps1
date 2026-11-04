@@ -101,8 +101,8 @@ if (VenvOk) {
         Warn "Kein passendes Python 3.11 oder neuer gefunden."
         $Uv = UvFinden
         if (-not $Uv) {
-            if (-not (Frage "Python über „uv“ in deinen Benutzerordner installieren (ohne Admin-Rechte, ca. 50 MB)?")) {
-                Abbruch "Ohne Python geht es nicht. Installiere Python 3.11+ von https://www.python.org (Haken bei „Add Python to PATH“) und starte das Setup neu."
+            if (-not (Frage "Python über 'uv' in deinen Benutzerordner installieren (ohne Admin-Rechte, ca. 50 MB)?")) {
+                Abbruch "Ohne Python geht es nicht. Installiere Python 3.11+ von https://www.python.org (Haken bei 'Add Python to PATH') und starte das Setup neu."
             }
             try { Invoke-RestMethod https://astral.sh/uv/install.ps1 -ErrorAction Stop | Invoke-Expression | Out-Null } catch { Abbruch "uv-Installation fehlgeschlagen: $_" }
             PfadNeuLaden
@@ -181,9 +181,9 @@ Ok "Node-Pakete installiert"
 Titel "Konfiguration"
 if (-not (Test-Path "config.toml")) {
     Copy-Item "versionen\$Version.toml" "config.toml"
-    Ok "config.toml für die Version „$Version“ angelegt"
+    Ok "config.toml für die Version '$Version' angelegt"
 } elseif ((StdAusConfig "config.toml") -ne (StdAusConfig "versionen\$Version.toml")) {
-    if (Frage "config.toml ist für eine andere Version eingestellt. Auf „$Version“ umstellen (alte Datei -> config.toml.bak)?") {
+    if (Frage "config.toml ist für eine andere Version eingestellt. Auf '$Version' umstellen (alte Datei -> config.toml.bak)?") {
         Copy-Item "config.toml" "config.toml.bak" -Force
         Copy-Item "versionen\$Version.toml" "config.toml" -Force
         Ok "config.toml umgestellt"
@@ -218,7 +218,7 @@ switch ($Version) {
 "claude" {
     Titel "Claude"
     if (-not (Befehl "git")) {
-        Warn "Claude Code braucht unter Windows „Git for Windows“."
+        Warn "Claude Code braucht unter Windows 'Git for Windows'."
         if ((Befehl "winget") -and (Frage "Git for Windows mit winget installieren?")) {
             winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
             PfadNeuLaden
@@ -237,7 +237,7 @@ switch ($Version) {
             $t = $t -replace '(?m)^befehl = "claude"', ('befehl = "' + ($cl -replace '\\', '/') + '"')
             [IO.File]::WriteAllText((Join-Path $Wurzel "config.toml"), $t, $Utf8)
         }
-        Warn "Melde dich einmal mit deinem Claude-Konto an (Pro oder höher): „$cl“ starten, anmelden, mit /exit beenden."
+        Warn "Melde dich einmal mit deinem Claude-Konto an (Pro oder höher): '$cl' starten, anmelden, mit /exit beenden."
         if (-not $Ja -and (Frage "Claude jetzt zum Anmelden starten?")) { & $cl }
     } else {
         Warn "Ohne Claude Code funktioniert diese Version nicht. Anleitung: https://claude.com/claude-code"
@@ -253,7 +253,7 @@ switch ($Version) {
         if (-not $key -and -not $Ja) {
             Write-Host "Du brauchst einen kostenlosen Schlüssel von Google AI Studio:"
             Write-Host "  1. https://aistudio.google.com/apikey öffnen und mit einem Google-Konto anmelden"
-            Write-Host "  2. „Create API key“ klicken und den Schlüssel kopieren"
+            Write-Host "  2. 'Create API key' klicken und den Schlüssel kopieren"
             if (Frage "Seite jetzt im Browser öffnen?") { Start-Process "https://aistudio.google.com/apikey" }
             $key = SchluesselLesen
         }
@@ -298,7 +298,7 @@ switch ($Version) {
     $vorhanden = (& $ol list 2>$null | ForEach-Object { ($_ -split '\s+')[0] }) -contains $modell
     if ($vorhanden) { Ok "Modell $modell ist schon da" }
     elseif (Frage "Modell $modell herunterladen (ca. 3 GB)?") { & $ol pull $modell; Ok "Modell $modell geladen" }
-    else { Warn "Ohne Modell geht es nicht: später „ollama pull $modell“ ausführen." }
+    else { Warn "Ohne Modell geht es nicht: später 'ollama pull $modell' ausführen." }
 }
 }
 
@@ -319,7 +319,7 @@ $start += @(
 [IO.File]::WriteAllText((Join-Path $Wurzel "start.bat"), (($start -join "`r`n") + "`r`n"), $Utf8)
 Ok "start.bat angelegt"
 
-if (-not $Ja -and (Frage "Verknüpfung „gen_Ut“ auf dem Desktop anlegen?")) {
+if (-not $Ja -and (Frage "Verknüpfung 'gen_Ut' auf dem Desktop anlegen?")) {
     $sh = New-Object -ComObject WScript.Shell
     $lnk = $sh.CreateShortcut((Join-Path ([Environment]::GetFolderPath("Desktop")) "gen_Ut.lnk"))
     $lnk.TargetPath = Join-Path $Wurzel "start.bat"
