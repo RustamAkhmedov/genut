@@ -5,7 +5,7 @@ import json
 import re
 import subprocess
 
-from ..config import WURZEL
+from ..config import WURZEL, node_befehl
 
 TEX_RE = re.compile(r"\\\((.+?)\\\)|\\\[(.+?)\\\]", re.S)
 
@@ -21,7 +21,7 @@ def pruefen(eintraege: list[dict]) -> dict[str, list[str]]:
     """eintraege: [{id, tex, display}] → {id: [meldung, …]} für fehlerhafte."""
     if not eintraege:
         return {}
-    r = subprocess.run(["node", str(WURZEL / "node" / "tex_check.js")], input=json.dumps(eintraege),
+    r = subprocess.run([node_befehl(), str(WURZEL / "node" / "tex_check.js")], input=json.dumps(eintraege),
                        capture_output=True, text=True, cwd=WURZEL, timeout=120)
     if r.returncode != 0:
         raise RuntimeError(f"tex_check.js fehlgeschlagen: {r.stderr[-500:]}")

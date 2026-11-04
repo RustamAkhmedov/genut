@@ -15,7 +15,7 @@ from markupsafe import Markup
 
 from .. import faecher
 from ..bilder import ausschnitt_base64
-from ..config import WURZEL
+from ..config import WURZEL, node_befehl
 from ..schema import Dokument, FormelBlock, GraphBlock, SqlErgebnis
 
 HIER = Path(__file__).resolve().parent
@@ -254,7 +254,7 @@ def rendern(doc: Dokument, fotos: Path | None, slug: str, ziel: Path, diagramme:
         f.write(roh)
         tmp = Path(f.name)
     try:
-        r = subprocess.run(["node", str(WURZEL / "node" / "prerender.js"), str(tmp), str(ziel)],
+        r = subprocess.run([node_befehl(), str(WURZEL / "node" / "prerender.js"), str(tmp), str(ziel)],
                            capture_output=True, text=True, cwd=WURZEL, timeout=300)
     finally:
         tmp.unlink(missing_ok=True)

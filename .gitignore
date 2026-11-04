@@ -7,3 +7,7 @@ __pycache__/
 tests/_out/
 .pytest_cache/
 config.toml
+.werkzeuge/
+start.sh
+start.command
+start.bat

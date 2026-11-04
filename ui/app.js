@@ -162,7 +162,7 @@ function fachOptionen(gewaehlt) {
 }
 
 /* ---------------- KI-Version (aus config.toml) ---------------- */
-const MODELL_NAME = { claude_code: 'Claude', gemini: 'Gemini', ollama: 'Lokal (Ollama)' };
+const MODELL_NAME = { claude_code: 'Claude', gemini: 'Gemini', ollama: 'Lokal (Ollama, experimentell)' };
 let KI = { standard: 'claude_code', auswahl: ['claude_code', 'gemini'], gemini_schluessel: false, pages: false };
 async function kiLaden() {
   try { KI = await api('GET', '/ki'); } catch (e) { /* Standardwerte */ }
@@ -208,7 +208,7 @@ async function kiSchalterZeigen() {
   s.querySelectorAll('[data-ki]').forEach(b => b.remove());
   for (const m of optionen) {
     const b = document.createElement('button');
-    b.type = 'button'; b.setAttribute('role', 'radio'); b.dataset.ki = m; b.textContent = (MODELL_NAME[m] || m).replace(' (Ollama)', '');
+    b.type = 'button'; b.setAttribute('role', 'radio'); b.dataset.ki = m; b.textContent = (MODELL_NAME[m] || m).replace(/ \(.*\)$/, '');
     b.addEventListener('click', () => kiWaehlen(m));
     s.appendChild(b);
   }

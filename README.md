@@ -21,6 +21,7 @@ Heraus kommt **eine einzige HTML-Datei**. Sie funktioniert offline am Handy und 
 9. [Datenschutz](#datenschutz)
 10. [Häufige Probleme](#häufige-probleme)
 11. [Für Entwickler](#für-entwickler)
+12. [Lizenz](#lizenz)
 
 ---
 
@@ -30,7 +31,7 @@ gen_Ut ist überall dasselbe Programm. Die Versionen unterscheiden sich nur dari
 
 | | **Claude** | **Gemini** | **Lokal** |
 |---|---|---|---|
-| KI | Claude über die Claude-Code-CLI | Google Gemini (Flash-Modelle) | Ollama mit `gemma3:4b` auf deinem Computer |
+| KI | Claude über die Claude-Code-CLI | Google Gemini (Flash-Modelle) | Ollama mit `gemma3:4b` auf deinem Computer – **experimentell** |
 | Kosten | braucht ein Claude-Abo (Pro oder höher), verbraucht dessen Nutzung | **gratis** mit API-Schlüssel von Google AI Studio | gratis |
 | Qualität | am besten: am meisten Inhalt, strengste Formatprüfung | gut, etwas knapper | einfacher, für kurze Unterlagen |
 | Tempo pro Lernseite | ca. 3–10 Minuten | ca. 2 Minuten | je nach Computer deutlich länger |
@@ -40,97 +41,74 @@ gen_Ut ist überall dasselbe Programm. Die Versionen unterscheiden sich nur dari
 
 **Was bedeutet „20 Anfragen pro Tag“ bei Gemini?** Eine Lernseite aus Dateien (docx, pdf, pptx …) braucht meist **1 Anfrage**. Aus Fotos kommt **1 Anfrage pro Foto** fürs Abschreiben dazu. gen_Ut wechselt automatisch zum nächsten Gemini-Modell, wenn eines überlastet ist oder sein Tageslimit erreicht hat. Realistisch sind damit etwa **10–20 Lernseiten aus Dateien** oder **5–10 aus Foto-Sätzen** pro Tag möglich.
 
-**Welche soll ich nehmen?** Wenn du Claude Pro hast, nimm **Claude** und schalte für Kleinigkeiten auf Gemini um. Sonst nimm **Gemini**. **Lokal** ist für dich, wenn nichts deinen Computer verlassen soll. Diese Version ist noch experimentell.
+**Welche soll ich nehmen?** Wenn du Claude Pro hast, nimm **Claude** und schalte für Kleinigkeiten auf Gemini um. Sonst nimm **Gemini**. **Lokal** ist für dich, wenn nichts deinen Computer verlassen soll.
+
+> ⚠️ **Die lokale Version ist experimentell.** Ein kleines Modell auf dem Laptop ist deutlich langsamer und macht mehr Fehler als Claude oder Gemini. Rechne damit, dass Lernseiten knapper ausfallen und öfter nachgebessert werden müssen. Sie wurde noch nicht so ausführlich getestet wie die anderen beiden.
 
 ---
 
 ## Installation
 
-> Setup-Skripte, die das alles automatisch erledigen, sind in Arbeit. Bis dahin geht es so von Hand. Das dauert etwa 10 Minuten.
+Am einfachsten geht es mit dem **Setup-Skript**. Es richtet alles ein und fragt vor jeder Installation nach. Admin-Rechte braucht es nicht, nur die lokale Version unter Linux fragt für Ollama nach dem Passwort.
 
-### 1. Voraussetzungen
+### 1. gen_Ut herunterladen
 
-| Programm | Version | Download |
-|---|---|---|
-| Python | 3.11 oder neuer | https://www.python.org/downloads/ (Windows: beim Installieren „Add Python to PATH“ anhaken) |
-| Node.js | 20 oder neuer | https://nodejs.org/ (LTS-Version) |
-| Google Chrome oder Chromium | aktuell | nur für die Entwickler-Tests nötig |
+Unter [**Releases**](https://github.com/RustamAkhmedov/genut/releases/latest) das Zip deiner Version herunterladen und entpacken:
 
-### 2. gen_Ut herunterladen
+| Zip | Version |
+|---|---|
+| `genut-claude.zip` | Claude |
+| `genut-gemini.zip` | Gemini |
+| `genut-lokal.zip` | Lokal (experimentell) |
 
-Entweder mit git:
+Oder mit git (dann fragt dich das Setup nach der Version):
 
 ```bash
 git clone https://github.com/RustamAkhmedov/genut.git
-cd genut
 ```
 
-Oder auf GitHub **Code → Download ZIP**, entpacken und im Terminal in den Ordner wechseln. Unter **Releases** gibt es außerdem fertige Zips pro Version, in denen die `config.toml` schon passt. Dann kannst du Schritt 4 überspringen.
+### 2. Setup starten
 
-### 3. Abhängigkeiten installieren
+**Windows:** Im entpackten Ordner **`setup.bat` doppelklicken**. Falls Windows warnt („Der Computer wurde durch Windows geschützt“), wähle „Weitere Informationen → Trotzdem ausführen“.
 
-**macOS / Linux:**
+**macOS / Linux:** Terminal im Ordner öffnen und eingeben:
+
+```bash
+./setup.sh
+```
+
+(Unter macOS: Rechtsklick auf den Ordner → „Neues Terminal beim Ordner“. Falls `Permission denied` erscheint: `bash setup.sh`.)
+
+### 3. Was das Setup macht
+
+1. **Python 3.11+:** Ist es nicht vorhanden, lädt das Setup es nach Rückfrage über [uv](https://docs.astral.sh/uv/) in deinen Benutzerordner. Dann legt es eine eigene Python-Umgebung `.venv` an und installiert die Pakete.
+2. **Node.js 20+:** Fehlt es, lädt das Setup nach Rückfrage eine eigene Kopie in den Ordner `.werkzeuge/`. Dann installiert es MathJax, Mermaid und sql.js.
+3. **`config.toml`** für deine Version anlegen.
+4. **KI einrichten:**
+   - **Claude:** Claude Code installieren (offizieller Installer), unter Windows bei Bedarf auch Git. Danach meldest du dich einmal mit deinem Claude-Konto an.
+   - **Gemini:** Das Setup öffnet https://aistudio.google.com/apikey. Dort holst du dir gratis einen Schlüssel und fügst ihn ein. Er landet in der Datei `.env` und bleibt auf deinem Computer.
+   - **Lokal:** Ollama installieren und das Modell `gemma3:4b` herunterladen (ca. 3 GB).
+5. **Startbefehl anlegen:** `start.bat` (Windows, auf Wunsch mit Desktop-Verknüpfung) bzw. `start.sh` (unter macOS zusätzlich `start.command` zum Doppelklicken).
+
+Das Setup kannst du jederzeit nochmal starten. Es erkennt, was schon da ist, und kann auch die Version wechseln (`./setup.sh --version claude`, unter Windows `setup.bat -Version claude`). Mit `--ja` (Windows: `-Ja`) beantwortet es alle Rückfragen mit „ja“.
+
+<details>
+<summary><b>Ohne Setup-Skript (von Hand)</b></summary>
+
+Voraussetzungen: Python 3.11+ und Node.js 20+.
 
 ```bash
 python3 -m venv .venv
-.venv/bin/pip install -e .
-npm install
+.venv/bin/pip install -e .          # Windows: .venv\Scripts\pip install -e .
+npm ci
+cp versionen/gemini.toml config.toml   # oder claude.toml / lokal.toml (Windows: copy)
 ```
 
-**Windows (PowerShell):**
+Dann die KI einrichten:
 
-```powershell
-python -m venv .venv
-.venv\Scripts\pip install -e .
-npm install
-```
-
-### 4. Version wählen
-
-Kopiere die Datei deiner Version nach `config.toml`:
-
-```bash
-cp versionen/gemini.toml config.toml      # oder claude.toml / lokal.toml
-```
-
-Unter Windows: `copy versionen\gemini.toml config.toml`
-
-Ohne `config.toml` startet gen_Ut wie die Claude-Version.
-
-### 5. KI einrichten
-
-<details>
-<summary><b>Claude</b></summary>
-
-1. Claude Code installieren: https://claude.com/claude-code
-2. Im Terminal `claude` starten und mit deinem Claude-Konto anmelden (Pro oder höher).
-3. Fertig. gen_Ut ruft `claude` im Hintergrund auf.
-
-</details>
-
-<details>
-<summary><b>Gemini</b></summary>
-
-1. Auf https://aistudio.google.com/apikey mit einem Google-Konto anmelden und **„Create API key“** wählen. Das ist gratis.
-2. Im gen_Ut-Ordner eine Datei namens `.env` anlegen mit genau einer Zeile:
-   ```
-   GEMINI_API_KEY=dein-schlüssel
-   ```
-3. Den Schlüssel nirgends veröffentlichen. Die `.env` ist bereits so eingestellt, dass git sie ignoriert.
-
-</details>
-
-<details>
-<summary><b>Lokal (Ollama)</b></summary>
-
-1. Ollama installieren: https://ollama.com/download
-2. Das Modell herunterladen (ca. 3 GB):
-   ```bash
-   ollama pull gemma3:4b
-   ```
-3. Ollama muss laufen, während du gen_Ut benutzt. Unter macOS und Windows startet es meist von selbst, unter Linux mit `ollama serve`.
-
-Empfohlen sind mindestens 16 GB RAM. Eine Grafikkarte ist nicht nötig, macht es aber deutlich schneller. Ein anderes Modell trägst du in `config.toml` unter `[ollama] modell` ein. Es muss Bilder verstehen („vision“).
+- **Claude:** [Claude Code](https://claude.com/claude-code) installieren, einmal `claude` starten und anmelden.
+- **Gemini:** Datei `.env` mit der Zeile `GEMINI_API_KEY=dein-schlüssel` anlegen (Schlüssel gratis auf https://aistudio.google.com/apikey).
+- **Lokal:** [Ollama](https://ollama.com/download) installieren und `ollama pull gemma3:4b` ausführen.
 
 </details>
 
@@ -138,19 +116,11 @@ Empfohlen sind mindestens 16 GB RAM. Eine Grafikkarte ist nicht nötig, macht es
 
 ## Starten
 
-**macOS / Linux:**
+- **Windows:** `start.bat` doppelklicken (oder die Desktop-Verknüpfung „gen_Ut“).
+- **macOS:** `start.command` doppelklicken oder im Terminal `./start.sh`.
+- **Linux:** `./start.sh`
 
-```bash
-.venv/bin/python -m genut serve
-```
-
-**Windows:**
-
-```powershell
-.venv\Scripts\python -m genut serve
-```
-
-Dann im Browser **http://127.0.0.1:8765** öffnen. Beenden kannst du den Server im Terminal mit **Strg+C**.
+Der Browser öffnet sich automatisch mit **http://127.0.0.1:8765**. Das schwarze Fenster bzw. das Terminal muss offen bleiben, solange du gen_Ut benutzt. Beenden kannst du mit **Strg+C** oder indem du das Fenster schließt.
 
 gen_Ut ist nur auf deinem eigenen Computer erreichbar, nicht im Netzwerk.
 
@@ -300,7 +270,8 @@ Trotzdem gilt: Die KI kann sich bei Erklärungen irren. Lies die Seite durch, be
 | „Gemini ist gerade überlastet“ | Ein paar Minuten warten oder oben auf Claude umschalten. gen_Ut probiert schon von selbst andere Gemini-Modelle. |
 | „Tageslimit … erreicht“ | Das Gratis-Kontingent für heute ist aufgebraucht. Morgen geht es wieder, oder du nutzt bis dahin eine andere KI. |
 | „Ollama nicht erreichbar“ | Ollama starten (`ollama serve`) und prüfen, ob das Modell da ist (`ollama list`). |
-| `npm: command not found` | Node.js installieren und das Terminal neu öffnen. |
+| `npm: command not found` | Setup nochmal starten. Es lädt Node.js bei Bedarf selbst herunter. |
+| Setup bricht ab | Die letzten Zeilen der Fehlermeldung lesen. Ausführliche Protokolle stehen in `.werkzeuge/pip.log` und `.werkzeuge/npm.log`. |
 | Port 8765 belegt | In `config.toml` unter `[server]` einen anderen `port` eintragen. |
 | Diagramm zeigt nur Text | Projekt einmal im Tool unter **Vorschau** öffnen, dann wird es gezeichnet und gespeichert. |
 | Transkript schlecht | Besseres Foto (Licht, gerade, scharf) oder Text im Editor korrigieren und **Neu transkribieren**. |
@@ -337,3 +308,10 @@ Aufbau:
 | `node/` | MathJax-Vorberechnung (Formeln werden offline in SVG umgewandelt) |
 | `ui/` | Web-Oberfläche des Tools |
 | `versionen/` | Konfiguration der drei Versionen |
+| `setup.sh`, `setup.ps1`, `setup.bat` | Einrichtung für macOS/Linux und Windows |
+
+---
+
+## Lizenz
+
+[MIT](LICENSE): Du darfst gen_Ut frei benutzen, verändern und weitergeben, auch in veränderter Form, solange der Lizenzhinweis dabei bleibt. Es gibt keine Gewährleistung.

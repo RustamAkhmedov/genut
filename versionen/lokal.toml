@@ -1,4 +1,4 @@
-# gen_Ut – Version: Lokal (Ollama, alles bleibt auf deinem Computer)
+# gen_Ut – Version: Lokal (Ollama, alles bleibt auf deinem Computer) – EXPERIMENTELL
 # Diese Datei wird beim Einrichten nach config.toml kopiert. Änderungen danach in config.toml.
 
 [server]

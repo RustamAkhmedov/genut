@@ -7,6 +7,7 @@ name = "genut"
 version = "0.1.0"
 description = "Aus Fotos von Heftseiten werden interaktive Lernseiten"
 requires-python = ">=3.11"
+license = "MIT"
 dependencies = [
   "fastapi>=0.110",
   "uvicorn[standard]>=0.29",

@@ -33,5 +33,15 @@ def laden() -> dict:
     return cfg
 
 
+def node_befehl() -> str:
+    """Node.js: GENUT_NODE, sonst die vom Setup mitgebrachte Version in .werkzeuge/node, sonst `node` aus dem PATH."""
+    if os.environ.get("GENUT_NODE"):
+        return os.environ["GENUT_NODE"]
+    for kandidat in (WURZEL / ".werkzeuge" / "node" / "bin" / "node", WURZEL / ".werkzeuge" / "node" / "node.exe"):
+        if kandidat.exists():
+            return str(kandidat)
+    return "node"
+
+
 def projekte_ordner() -> Path:
     return Path(os.environ.get("GENUT_PROJEKTE", WURZEL / "projekte"))
