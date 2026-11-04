@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "projekt": {
+    "titel": "Integralrechnung",
+    "untertitel": "1. Schularbeit · 4. Klasse",
+    "fach": "mathe",
+    "sprache": "de"
+  },
+  "themen": [
+    {
+      "id": "t-00000001",
+      "titel": "Bestimmtes Integral",
+      "kurz": "Fläche zwischen Kurve und x-Achse",
+      "quelle": "foto",
+      "bloecke": [
+        {
+          "id": "b-00000001", "typ": "text", "quelle": "foto", "foto": "001.jpg",
+          "md": "Das **bestimmte Integral** misst die orientierte Fläche zwischen dem Graphen von \\(f\\) und der \\(x\\)-Achse im Intervall \\([a;\\,b]\\). Flächen *unter* der Achse zählen negativ."
+        },
+        {
+          "id": "b-00000002", "typ": "definition", "quelle": "foto", "foto": "001.jpg", "spick": true,
+          "begriff": "Stammfunktion",
+          "md": "Eine Funktion \\(F\\) heißt Stammfunktion von \\(f\\), wenn \\(F'(x) = f(x)\\) für alle \\(x\\) gilt."
+        },
+        {
+          "id": "b-00000003", "typ": "formel", "quelle": "foto", "foto": "001.jpg", "spick": true,
+          "titel": "Hauptsatz der Differential- und Integralrechnung",
+          "tex": "\\int_a^b f(x)\\,dx = F(b) - F(a)",
+          "variablen": [
+            {"name": "F", "bedeutung": "eine beliebige Stammfunktion von \\(f\\)"},
+            {"name": "a,\\ b", "bedeutung": "untere und obere Grenze"}
+          ],
+          "erklaerung_md": "Die Integrationskonstante \\(C\\) fällt beim Subtrahieren weg.",
+          "graph": {
+            "x_min": -1, "x_max": 3,
+            "funktionen": [{"ausdruck": "a*x**2", "label": "f(x) = a·x²"}],
+            "parameter": [{"name": "a", "min": -2, "max": 2, "schritt": 0.1, "start": 1, "bedeutung": "Streckfaktor"}],
+            "flaeche": {"funktion": 0, "von": 0, "bis": 2}
+          }
+        },
+        {
+          "id": "b-00000004", "typ": "regel", "quelle": "ki", "spick": true,
+          "titel": "Potenzregel beim Integrieren",
+          "md": "\\[\\int x^n\\,dx = \\frac{x^{n+1}}{n+1} + C \\qquad (n \\neq -1)\\]",
+          "beispiele": ["\\(\\int x^3\\,dx = \\tfrac{x^4}{4} + C\\)", "\\(\\int \\sqrt{x}\\,dx = \\tfrac{2}{3}x^{3/2} + C\\)"]
+        },
+        {
+          "id": "b-00000005", "typ": "bild", "quelle": "foto", "foto": "001.jpg",
+          "bbox": [0.1, 0.35, 0.8, 0.5], "alt": "Skizze: Parabel f(x) = x² mit schraffierter Fläche von 0 bis 2",
+          "beschriftung": "Skizze aus dem Heft"
+        },
+        {
+          "id": "b-00000006", "typ": "hinweis", "quelle": "ki", "art": "falle",
+          "md": "Liegt ein Teil der Fläche unter der \\(x\\)-Achse, musst du an den Nullstellen aufteilen und Beträge addieren – sonst heben sich die Teile auf."
+        },
+        {
+          "id": "b-00000007", "typ": "hinweis", "quelle": "ki", "art": "tipp",
+          "md": "Schreib die Stammfunktion immer in eckige Klammern: \\(\\big[F(x)\\big]_a^b\\). So vergisst du die untere Grenze nicht."
+        }
+      ]
+    },
+    {
+      "id": "t-00000002",
+      "titel": "Bogenlänge",
+      "kurz": "Wie lang ist eine Kurve?",
+      "quelle": "ki",
+      "bloecke": [
+        {
+          "id": "b-00000011", "typ": "formel", "quelle": "ki", "spick": true,
+          "titel": "Bogenlänge",
+          "tex": "s = \\int_a^b \\sqrt{1 + f'(x)^2}\\,dx"
+        },
+        {
+          "id": "b-00000012", "typ": "tabelle", "quelle": "ki",
+          "titel": "Typische Ableitungen",
+          "kopf": ["\\(f(x)\\)", "\\(f'(x)\\)", "\\(1+f'(x)^2\\)"],
+          "zeilen": [
+            ["\\(x^2\\)", "\\(2x\\)", "\\(1+4x^2\\)"],
+            ["\\(\\tfrac{2}{3}x^{3/2}\\)", "\\(\\sqrt{x}\\)", "\\(1+x\\)"],
+            ["\\(\\cosh x\\)", "\\(\\sinh x\\)", "\\(\\cosh^2 x\\)"]
+          ]
+        },
+        {
+          "id": "b-00000013", "typ": "graph", "quelle": "ki",
+          "titel": "Kettenlinie",
+          "graph": {
+            "x_min": -2, "x_max": 2,
+            "funktionen": [{"ausdruck": "k*cosh(x/k)", "label": "k·cosh(x/k)"}, {"ausdruck": "1 + x**2/2", "label": "Näherung"}],
+            "parameter": [{"name": "k", "min": 0.5, "max": 3, "schritt": 0.1, "start": 1}]
+          },
+          "erklaerung_md": "Für kleine \\(x\\) ist die Kettenlinie fast eine Parabel."
+        },
+        {
+          "id": "b-00000014", "typ": "graph", "quelle": "ki",
+          "titel": "Absichtlich kaputter Graph (Testfall)",
+          "graph": {"x_min": -3, "x_max": 3, "funktionen": [{"ausdruck": "log(x)", "label": "ln x"}]}
+        },
+        {
+          "id": "b-00000015", "typ": "text", "quelle": "ki",
+          "md": "Breite Formeln (Testfall für 375 px): abgesetzt im Fließtext\n\n\\[ s = \\int_{0}^{2}\\sqrt{1+\\left(6\\sqrt{x}\\right)^2}\\,dx = \\int_{0}^{2}\\sqrt{1+36x}\\,dx = \\left[\\frac{(1+36x)^{3/2}}{54}\\right]_{0}^{2} \\approx 8{,}24 \\]\n\nund inline ohne Trennstelle: \\( A = \\left|\\int_{x_1}^{x_2}(f-g)\\,dx\\right| + \\left|\\int_{x_2}^{x_3}(f-g)\\,dx\\right| + \\ldots \\)"
+        }
+      ]
+    }
+  ],
+  "aufgaben": [
+    {
+      "id": "a-00000001", "art": "foto", "quelle": "foto", "foto": "001.jpg", "thema_id": "t-00000001",
+      "titel": "Fläche unter \\(x^2\\) von 0 bis 2", "schwierigkeit": 1,
+      "angabe_md": "Berechne die Fläche zwischen \\(f(x) = x^2\\) und der \\(x\\)-Achse im Intervall \\([0;\\,2]\\).",
+      "schritte": [
+        {"titel": "Stammfunktion", "quelle": "ki", "bloecke": [
+          {"id": "b-00000101", "typ": "text", "quelle": "ki", "md": "\\(F(x) = \\tfrac{x^3}{3}\\)"}
+        ]},
+        {"titel": "Grenzen einsetzen", "quelle": "ki", "bloecke": [
+          {"id": "b-00000102", "typ": "text", "quelle": "ki", "md": "\\[A = \\Big[\\tfrac{x^3}{3}\\Big]_0^2 = \\tfrac{8}{3} - 0\\]"}
+        ]}
+      ],
+      "ergebnis": {"md": "\\(A = \\tfrac{8}{3} \\approx 2{,}67\\) FE", "check": {"art": "gleich", "ausdruck": "integrate(x**2, (x, 0, 2))", "erwartet": "8/3"}}
+    },
+    {
+      "id": "a-00000002", "art": "foto", "quelle": "foto", "foto": "001.jpg", "thema_id": "t-00000001",
+      "titel": "Nullstellen für die Flächenaufteilung", "schwierigkeit": 2,
+      "angabe_md": "Bestimme die Nullstellen von \\(f(x) = x^2 - 4\\).",
+      "schritte": [
+        {"titel": "Gleichung aufstellen", "quelle": "ki", "bloecke": [
+          {"id": "b-00000103", "typ": "text", "quelle": "ki", "md": "\\(x^2 - 4 = 0 \\Rightarrow x^2 = 4\\)"}
+        ]}
+      ],
+      "ergebnis": {"md": "\\(x_1 = -2,\\ x_2 = 2\\)", "check": {"art": "loesungen", "gleichungen": ["x**2 - 4"], "variablen": ["x"], "erwartet": [{"x": "-2"}, {"x": "2"}]}}
+    },
+    {
+      "id": "a-00000003", "art": "probe", "quelle": "ki", "thema_id": "t-00000002",
+      "titel": "Bogenlänge von \\(f(x)=\\tfrac{2}{3}x^{3/2}\\)", "schwierigkeit": 3,
+      "angabe_md": "Berechne die Bogenlänge von \\(f(x) = \\tfrac{2}{3}x^{3/2}\\) im Intervall \\([0;\\,3]\\).",
+      "schritte": [
+        {"titel": "Ableiten", "quelle": "ki", "bloecke": [
+          {"id": "b-00000104", "typ": "text", "quelle": "ki", "md": "\\(f'(x) = \\sqrt{x}\\), also \\(1 + f'(x)^2 = 1 + x\\)."}
+        ]},
+        {"titel": "Integrieren", "quelle": "ki", "bloecke": [
+          {"id": "b-00000105", "typ": "formel", "quelle": "ki", "tex": "s = \\int_0^3 \\sqrt{1+x}\\,dx = \\Big[\\tfrac{2}{3}(1+x)^{3/2}\\Big]_0^3 = \\tfrac{2}{3}(8-1)"}
+        ]}
+      ],
+      "ergebnis": {"md": "\\(s = \\tfrac{14}{3} \\approx 4{,}67\\) LE", "check": {"art": "numerisch", "ausdruck": "integrate(sqrt(1+x), (x, 0, 3))", "erwartet": 4.667, "toleranz": 0.01}}
+    },
+    {
+      "id": "a-00000004", "art": "probe", "quelle": "ki", "thema_id": "t-00000001",
+      "titel": "Fläche unter \\(3x^2\\) von 1 bis 2 (Testfall: falsches Ergebnis)", "schwierigkeit": 2,
+      "angabe_md": "Berechne \\(\\int_1^2 3x^2\\,dx\\).",
+      "schritte": [
+        {"titel": "Stammfunktion", "quelle": "ki", "bloecke": [
+          {"id": "b-00000106", "typ": "text", "quelle": "ki", "md": "\\(F(x) = x^3\\)"}
+        ]}
+      ],
+      "ergebnis": {"md": "\\(8\\)", "check": {"art": "gleich", "ausdruck": "integrate(3*x**2, (x, 1, 2))", "erwartet": "8"}}
+    },
+    {
+      "id": "a-00000005", "art": "probe", "quelle": "ki", "thema_id": "t-00000002",
+      "titel": "Bogenlänge abschätzen (ohne check)", "schwierigkeit": 1, "rechenaufgabe": true,
+      "angabe_md": "Ist die Bogenlänge von \\(x^2\\) auf \\([0;1]\\) größer als \\(\\sqrt 2\\)?",
+      "schritte": [
+        {"titel": "Vergleich", "quelle": "ki", "bloecke": [
+          {"id": "b-00000107", "typ": "text", "quelle": "ki", "md": "Die Sehne von \\((0|0)\\) nach \\((1|1)\\) hat Länge \\(\\sqrt 2\\); die Kurve ist länger."}
+        ]}
+      ],
+      "ergebnis": {"md": "Ja."}
+    }
+  ],
+  "karten": [
+    {"id": "k-00000001", "thema_id": "t-00000001", "quelle": "ki", "vorne_md": "Was ist eine Stammfunktion?", "hinten_md": "Eine Funktion \\(F\\) mit \\(F' = f\\)."},
+    {"id": "k-00000002", "thema_id": "t-00000001", "quelle": "ki", "vorne_md": "Hauptsatz?", "hinten_md": "\\[\\int_a^b f(x)\\,dx = F(b)-F(a)\\]"},
+    {"id": "k-00000003", "thema_id": "t-00000001", "quelle": "ki", "vorne_md": "\\(\\int x^n\\,dx = \\,?\\)", "hinten_md": "\\(\\tfrac{x^{n+1}}{n+1} + C\\) für \\(n \\neq -1\\)"},
+    {"id": "k-00000004", "thema_id": "t-00000001", "quelle": "ki", "vorne_md": "Was tun, wenn die Fläche unter der Achse liegt?", "hinten_md": "An den Nullstellen aufteilen und Beträge addieren."},
+    {"id": "k-00000005", "thema_id": "t-00000002", "quelle": "ki", "vorne_md": "Formel für die Bogenlänge?", "hinten_md": "\\[s=\\int_a^b\\sqrt{1+f'(x)^2}\\,dx\\]"},
+    {"id": "k-00000006", "thema_id": "t-00000002", "quelle": "ki", "vorne_md": "\\(1 + \\sinh^2 x = \\,?\\)", "hinten_md": "\\(\\cosh^2 x\\)"},
+    {"id": "k-00000007", "thema_id": "t-00000002", "quelle": "ki", "vorne_md": "Einheit der Bogenlänge?", "hinten_md": "Längeneinheiten (LE)"},
+    {"id": "k-00000008", "thema_id": "t-00000002", "quelle": "ki", "vorne_md": "Kaputte Formel (Testfall)", "hinten_md": "\\(\\frac{1}{\\)"}
+  ]
+}

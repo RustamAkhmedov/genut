@@ -1,0 +1,299 @@
+{
+ "schema_version": 1,
+ "projekt": {
+  "titel": "Stöchiometrie & Kinematik",
+  "untertitel": "Chemie und Physik",
+  "fach": "chemie",
+  "sprache": "de"
+ },
+ "themen": [
+  {
+   "id": "t-00000101",
+   "titel": "Reaktionsgleichungen und Rauchgasentschwefelungsanlagenbetrieb",
+   "kurz": "Atome und Ladungen ausgleichen",
+   "quelle": "foto",
+   "bloecke": [
+    {
+     "id": "b-00000101",
+     "typ": "definition",
+     "quelle": "foto",
+     "begriff": "Stoffmenge",
+     "md": "Die Stoffmenge \\(n\\) gibt die Teilchenzahl in Mol an: \\(n = \\frac{m}{M}\\).",
+     "spick": true
+    },
+    {
+     "id": "b-00000102",
+     "typ": "reaktion",
+     "quelle": "foto",
+     "titel": "Knallgasreaktion",
+     "gleichung": "2H2 + O2 -> 2H2O",
+     "erklaerung_md": "Wasserstoff verbrennt mit Sauerstoff zu Wasser.",
+     "spick": true
+    },
+    {
+     "id": "b-00000103",
+     "typ": "reaktion",
+     "quelle": "ki",
+     "titel": "Fällung",
+     "gleichung": "Fe^3+ + 3OH- -> Fe(OH)3 v",
+     "erklaerung_md": "Eisen(III)-hydroxid fällt aus."
+    },
+    {
+     "id": "b-00000104",
+     "typ": "reaktion",
+     "quelle": "ki",
+     "titel": "Absichtlich falsch (Testfall)",
+     "gleichung": "H2 + O2 -> H2O"
+    },
+    {
+     "id": "b-00000105",
+     "typ": "text",
+     "quelle": "ki",
+     "md": "Im Fließtext: \\(\\ce{H2SO4}\\) ist Schwefelsäure, \\(\\ce{SO4^2-}\\) das Sulfat-Ion."
+    },
+    {
+     "id": "b-00000106",
+     "typ": "struktur",
+     "quelle": "foto",
+     "name": "Essigsäureethylester",
+     "smiles": "CC(=O)OCC",
+     "summenformel": "C4H8O2",
+     "halbstruktur": "CH3-COO-CH2-CH3",
+     "darstellung": "beide",
+     "erklaerung_md": "Ester aus Essigsäure und Ethanol.",
+     "spick": true
+    },
+    {
+     "id": "b-00000107",
+     "typ": "struktur",
+     "quelle": "ki",
+     "name": "cis-But-2-en",
+     "smiles": "C/C=C\\C",
+     "summenformel": "C4H8",
+     "halbstruktur": "CH3-CH=CH-CH3",
+     "darstellung": "valenzstrich"
+    },
+    {
+     "id": "b-00000108",
+     "typ": "struktur",
+     "quelle": "ki",
+     "name": "Benzol",
+     "smiles": "c1ccccc1",
+     "summenformel": "C6H6",
+     "darstellung": "skelett"
+    },
+    {
+     "id": "b-00000109",
+     "typ": "struktur",
+     "quelle": "ki",
+     "name": "Absichtlich falsch (Testfall)",
+     "smiles": "CCO",
+     "summenformel": "C2H4O",
+     "halbstruktur": "CH3-CH2-OH"
+    }
+   ]
+  },
+  {
+   "id": "t-00000102",
+   "titel": "Gleichförmige Bewegung",
+   "kurz": "Weg, Zeit, Geschwindigkeit",
+   "quelle": "foto",
+   "bloecke": [
+    {
+     "id": "b-00000111",
+     "typ": "formel",
+     "quelle": "foto",
+     "titel": "Weg-Zeit-Gesetz",
+     "tex": "s = v \\cdot t",
+     "variablen": [
+      {
+       "name": "s",
+       "bedeutung": "Weg in m"
+      },
+      {
+       "name": "v",
+       "bedeutung": "Geschwindigkeit in m/s"
+      }
+     ],
+     "graph": {
+      "x_min": 0,
+      "x_max": 10,
+      "funktionen": [
+       {
+        "ausdruck": "v*x",
+        "label": "s(t)"
+       }
+      ],
+      "parameter": [
+       {
+        "name": "v",
+        "min": 0.5,
+        "max": 5,
+        "schritt": 0.5,
+        "start": 2,
+        "bedeutung": "Geschwindigkeit in m/s"
+       }
+      ]
+     },
+     "spick": true
+    }
+   ]
+  }
+ ],
+ "aufgaben": [
+  {
+   "id": "a-00000101",
+   "art": "foto",
+   "quelle": "foto",
+   "thema_id": "t-00000101",
+   "titel": "Verbrennung von Methan",
+   "schwierigkeit": 2,
+   "angabe_md": "Gleiche die Reaktion \\(\\ce{CH4 + O2 -> CO2 + H2O}\\) aus.",
+   "rechenaufgabe": true,
+   "schritte": [
+    {
+     "titel": "Kohlenstoff und Wasserstoff",
+     "quelle": "ki",
+     "bloecke": [
+      {
+       "id": "b-00000121",
+       "typ": "text",
+       "quelle": "ki",
+       "md": "C: 1 = 1, H: 4 → 2 Wasser."
+      }
+     ]
+    }
+   ],
+   "ergebnis": {
+    "md": "\\(\\ce{CH4 + 2O2 -> CO2 + 2H2O}\\)",
+    "check": {
+     "art": "reaktion",
+     "gleichung": "CH4 + 2O2 -> CO2 + 2H2O"
+    }
+   }
+  },
+  {
+   "id": "a-00000102",
+   "art": "foto",
+   "quelle": "foto",
+   "thema_id": "t-00000102",
+   "titel": "Zugfahrt",
+   "schwierigkeit": 2,
+   "angabe_md": "Ein Zug fährt 20 Minuten mit 90 km/h. Wie weit kommt er?",
+   "rechenaufgabe": true,
+   "schritte": [
+    {
+     "titel": "Formel",
+     "quelle": "ki",
+     "bloecke": [
+      {
+       "id": "b-00000122",
+       "typ": "text",
+       "quelle": "ki",
+       "md": "\\(s = v \\cdot t\\)"
+      }
+     ]
+    }
+   ],
+   "ergebnis": {
+    "md": "\\(s = 30\\,\\mathrm{km}\\)",
+    "check": {
+     "art": "einheit",
+     "ausdruck": "90*km/h * 20*min",
+     "erwartet": "30*km"
+    }
+   }
+  },
+  {
+   "id": "a-00000103",
+   "art": "probe",
+   "quelle": "ki",
+   "thema_id": "t-00000102",
+   "titel": "Falsche Einheit (Testfall)",
+   "schwierigkeit": 2,
+   "angabe_md": "Wie weit kommt man in 3 s mit 12 m/s?",
+   "rechenaufgabe": true,
+   "schritte": [
+    {
+     "titel": "Rechnen",
+     "quelle": "ki",
+     "bloecke": [
+      {
+       "id": "b-00000123",
+       "typ": "text",
+       "quelle": "ki",
+       "md": "\\(s = 12 \\cdot 3\\)"
+      }
+     ]
+    }
+   ],
+   "ergebnis": {
+    "md": "\\(s = 36\\,\\mathrm{s}\\)",
+    "check": {
+     "art": "einheit",
+     "ausdruck": "12*m/s * 3*s",
+     "erwartet": "36*s"
+    }
+   }
+  }
+ ],
+ "karten": [
+  {
+   "id": "k-00000101",
+   "thema_id": "t-00000101",
+   "quelle": "ki",
+   "vorne_md": "Was bleibt bei einer Reaktion erhalten?",
+   "hinten_md": "Atome jedes Elements und die Ladung."
+  }
+ ],
+ "quiz": [
+  {
+   "id": "q-00000101",
+   "thema_id": "t-00000101",
+   "quelle": "ki",
+   "art": "mc",
+   "frage_md": "Welche Gleichung ist ausgeglichen?",
+   "optionen": [
+    "\\(\\ce{H2 + O2 -> H2O}\\)",
+    "\\(\\ce{2H2 + O2 -> 2H2O}\\)",
+    "\\(\\ce{H2 + 2O2 -> H2O}\\)",
+    "\\(\\ce{2H2 + 2O2 -> H2O}\\)"
+   ],
+   "richtig": 1,
+   "erklaerung_md": "Links 4 H und 2 O, rechts ebenfalls.",
+   "check": {
+    "art": "reaktion",
+    "gleichung": "2H2 + O2 -> 2H2O"
+   }
+  },
+  {
+   "id": "q-00000102",
+   "thema_id": "t-00000102",
+   "quelle": "ki",
+   "art": "wahrfalsch",
+   "frage_md": "Bei doppelter Geschwindigkeit halbiert sich der Weg in derselben Zeit.",
+   "wahr": false,
+   "erklaerung_md": "Der Weg verdoppelt sich: \\(s = v \\cdot t\\)."
+  },
+  {
+   "id": "q-00000103",
+   "thema_id": "t-00000102",
+   "quelle": "ki",
+   "art": "mc",
+   "frage_md": "Wie viele m/s sind 72 km/h?",
+   "optionen": [
+    "\\(20\\)",
+    "\\(7{,}2\\)",
+    "\\(36\\)",
+    "\\(259{,}2\\)"
+   ],
+   "richtig": 0,
+   "erklaerung_md": "\\(72 : 3{,}6 = 20\\)",
+   "check": {
+    "art": "einheit",
+    "ausdruck": "72*km/h",
+    "erwartet": "20*m/s"
+   }
+  }
+ ]
+}

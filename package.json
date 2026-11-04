@@ -1,0 +1,11 @@
+{
+  "name": "genut-render",
+  "private": true,
+  "version": "1.0.0",
+  "description": "MathJax-Prerendering für gen_Ut",
+  "dependencies": {
+    "mathjax-full": "3.2.2",
+    "mermaid": "11.17.2",
+    "sql.js": "1.13.0"
+  }
+}

@@ -1,0 +1,191 @@
+{
+ "schema_version": 1,
+ "projekt": {
+  "titel": "Klimazonen",
+  "untertitel": "Geographie",
+  "fach": "geographie",
+  "sprache": "de"
+ },
+ "themen": [
+  {
+   "id": "t-00000601",
+   "titel": "Klima Mitteleuropas",
+   "kurz": "Gemäßigte Zone",
+   "quelle": "foto",
+   "bloecke": [
+    {
+     "id": "b-00000601",
+     "typ": "definition",
+     "quelle": "foto",
+     "begriff": "Klima",
+     "md": "Durchschnittlicher Zustand der Atmosphäre über mindestens 30 Jahre.",
+     "spick": true
+    },
+    {
+     "id": "b-00000602",
+     "typ": "klimadiagramm",
+     "quelle": "foto",
+     "ort": "Wien",
+     "lage": "48° N, 16° O, 171 m",
+     "klima": "Gemäßigtes Klima",
+     "temperatur": [
+      0.3,
+      2.0,
+      6.0,
+      11.0,
+      15.7,
+      19.0,
+      21.0,
+      20.6,
+      16.0,
+      10.5,
+      5.2,
+      1.2
+     ],
+     "niederschlag": [
+      38,
+      42,
+      41,
+      51,
+      62,
+      70,
+      68,
+      58,
+      54,
+      40,
+      49,
+      44
+     ]
+    },
+    {
+     "id": "b-00000603",
+     "typ": "zeitleiste",
+     "quelle": "ki",
+     "titel": "Klimageschichte",
+     "eintraege": [
+      {
+       "zeit": "um 1300",
+       "titel": "Mittelalterliche Warmzeit endet"
+      },
+      {
+       "zeit": "1550–1850",
+       "titel": "Kleine Eiszeit",
+       "md": "Gletscher stoßen weit vor."
+      },
+      {
+       "zeit": "seit 1850",
+       "titel": "Industrialisierung",
+       "md": "Anstieg der CO₂-Konzentration."
+      }
+     ]
+    },
+    {
+     "id": "b-00000604",
+     "typ": "diagramm",
+     "quelle": "ki",
+     "titel": "Projektplan Exkursion",
+     "mermaid": "gantt\n  dateFormat YYYY-MM-DD\n  section Vorbereitung\n  Planung :a1, 2026-11-02, 5d\n  Exkursion :after a1, 1d"
+    },
+    {
+     "id": "b-00000605",
+     "typ": "klimadiagramm",
+     "quelle": "ki",
+     "ort": "Absichtlich falsch (Testfall)",
+     "temperatur": [
+      1,
+      2,
+      3
+     ],
+     "niederschlag": [
+      1,
+      2,
+      3
+     ]
+    }
+   ]
+  }
+ ],
+ "aufgaben": [
+  {
+   "id": "a-00000601",
+   "art": "foto",
+   "quelle": "foto",
+   "thema_id": "t-00000601",
+   "titel": "Jahresniederschlag",
+   "schwierigkeit": 2,
+   "angabe_md": "Berechne den Jahresniederschlag von Wien aus dem Diagramm.",
+   "rechenaufgabe": true,
+   "schritte": [
+    {
+     "titel": "Summe",
+     "quelle": "ki",
+     "bloecke": [
+      {
+       "id": "b-00000621",
+       "typ": "text",
+       "quelle": "ki",
+       "md": "Alle Monatswerte addieren."
+      }
+     ]
+    }
+   ],
+   "ergebnis": {
+    "md": "617 mm",
+    "check": {
+     "art": "numerisch",
+     "ausdruck": "38+42+41+51+62+70+68+58+54+40+49+44",
+     "erwartet": 617,
+     "toleranz": 0.5
+    }
+   }
+  }
+ ],
+ "karten": [
+  {
+   "id": "k-00000601",
+   "thema_id": "t-00000601",
+   "quelle": "ki",
+   "vorne_md": "Wärmster Monat in Wien?",
+   "hinten_md": "Juli"
+  }
+ ],
+ "quiz": [
+  {
+   "id": "q-00000601",
+   "thema_id": "t-00000601",
+   "quelle": "ki",
+   "art": "mc",
+   "frage_md": "Wie lange wird Wetter mindestens gemittelt, um vom Klima zu sprechen?",
+   "optionen": [
+    "30 Jahre",
+    "1 Jahr",
+    "10 Jahre",
+    "100 Jahre"
+   ],
+   "richtig": 0,
+   "erklaerung_md": "Klimanormalperioden umfassen 30 Jahre."
+  },
+  {
+   "id": "q-00000602",
+   "thema_id": "t-00000601",
+   "quelle": "ki",
+   "art": "wahrfalsch",
+   "frage_md": "Wien hat im Juli mehr Niederschlag als im Jänner.",
+   "wahr": true,
+   "erklaerung_md": "Juli 68 mm, Jänner 38 mm."
+  },
+  {
+   "id": "q-00000603",
+   "thema_id": "t-00000601",
+   "quelle": "ki",
+   "art": "mc",
+   "frage_md": "Absichtlich falsch (Testfall)",
+   "optionen": [
+    "A",
+    "B"
+   ],
+   "richtig": 5,
+   "erklaerung_md": "Nur zwei Optionen und falscher Index."
+  }
+ ]
+}

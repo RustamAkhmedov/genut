@@ -1,0 +1,162 @@
+{
+ "schema_version": 1,
+ "projekt": {
+  "titel": "Subnetting",
+  "untertitel": "NSCS · IPv4 und IPv6",
+  "fach": "nscs",
+  "sprache": "de"
+ },
+ "themen": [
+  {
+   "id": "t-00000401",
+   "titel": "IPv4-Subnetting",
+   "kurz": "Netz, Broadcast, Hosts",
+   "quelle": "foto",
+   "bloecke": [
+    {
+     "id": "b-00000401",
+     "typ": "regel",
+     "quelle": "foto",
+     "titel": "Nutzbare Hosts",
+     "md": "Bei Präfix \\(p\\) gibt es \\(2^{32-p} - 2\\) nutzbare Hosts.",
+     "spick": true
+    },
+    {
+     "id": "b-00000402",
+     "typ": "subnetzrechner",
+     "quelle": "ki",
+     "start": "192.168.10.77/26"
+    },
+    {
+     "id": "b-00000403",
+     "typ": "befehl",
+     "quelle": "foto",
+     "befehl": "ip address add 192.168.10.65/26 dev eth0",
+     "erklaerung_md": "Adresse unter Linux setzen.",
+     "kontext": "bash"
+    },
+    {
+     "id": "b-00000404",
+     "typ": "subnetzrechner",
+     "quelle": "ki",
+     "titel": "Absichtlich falsch (Testfall)",
+     "start": "300.1.1.1/24"
+    },
+    {
+     "id": "b-00000405",
+     "typ": "diagramm",
+     "quelle": "ki",
+     "titel": "TCP-Handshake",
+     "mermaid": "sequenceDiagram\n  Client->>Server: SYN\n  Server->>Client: SYN-ACK\n  Client->>Server: ACK"
+    }
+   ]
+  }
+ ],
+ "aufgaben": [
+  {
+   "id": "a-00000401",
+   "art": "foto",
+   "quelle": "foto",
+   "thema_id": "t-00000401",
+   "titel": "Subnetz bestimmen",
+   "schwierigkeit": 2,
+   "angabe_md": "Bestimme Netzadresse, Broadcast und Hostanzahl für 192.168.10.77/26.",
+   "rechenaufgabe": true,
+   "schritte": [
+    {
+     "titel": "Maske",
+     "quelle": "ki",
+     "bloecke": [
+      {
+       "id": "b-00000421",
+       "typ": "text",
+       "quelle": "ki",
+       "md": "/26 → 255.255.255.192, Blockgröße 64."
+      }
+     ]
+    }
+   ],
+   "ergebnis": {
+    "md": "Netz 192.168.10.64, Broadcast 192.168.10.127, 62 Hosts",
+    "check": {
+     "art": "subnetz",
+     "netz": "192.168.10.77/26",
+     "erwartet": {
+      "netzadresse": "192.168.10.64",
+      "broadcast": "192.168.10.127",
+      "hosts": 62
+     }
+    }
+   }
+  },
+  {
+   "id": "a-00000402",
+   "art": "probe",
+   "quelle": "ki",
+   "thema_id": "t-00000401",
+   "titel": "IPv6-Präfix",
+   "schwierigkeit": 2,
+   "angabe_md": "Wie lautet das Netz von 2001:db8:abcd:12::1/64?",
+   "rechenaufgabe": true,
+   "schritte": [
+    {
+     "titel": "Präfix",
+     "quelle": "ki",
+     "bloecke": [
+      {
+       "id": "b-00000422",
+       "typ": "text",
+       "quelle": "ki",
+       "md": "Die ersten 64 Bit bleiben."
+      }
+     ]
+    }
+   ],
+   "ergebnis": {
+    "md": "2001:db8:abcd:12::/64",
+    "check": {
+     "art": "subnetz",
+     "netz": "2001:db8:abcd:12::1/64",
+     "erwartet": {
+      "netzadresse": "2001:db8:abcd:12::"
+     }
+    }
+   }
+  }
+ ],
+ "karten": [
+  {
+   "id": "k-00000401",
+   "thema_id": "t-00000401",
+   "quelle": "ki",
+   "vorne_md": "Maske zu /26?",
+   "hinten_md": "255.255.255.192"
+  }
+ ],
+ "quiz": [
+  {
+   "id": "q-00000401",
+   "thema_id": "t-00000401",
+   "quelle": "ki",
+   "art": "mc",
+   "frage_md": "Wie viele nutzbare Hosts hat ein /27-Netz?",
+   "optionen": [
+    "30",
+    "32",
+    "62",
+    "14"
+   ],
+   "richtig": 0,
+   "erklaerung_md": "\\(2^5 - 2 = 30\\)"
+  },
+  {
+   "id": "q-00000402",
+   "thema_id": "t-00000401",
+   "quelle": "ki",
+   "art": "wahrfalsch",
+   "frage_md": "Die Broadcast-Adresse von 10.0.0.0/8 ist 10.255.255.255.",
+   "wahr": true,
+   "erklaerung_md": "Alle Hostbits auf 1."
+  }
+ ]
+}

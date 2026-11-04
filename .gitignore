@@ -1,0 +1,9 @@
+projekte/
+.env
+node_modules/
+.venv/
+__pycache__/
+*.egg-info/
+tests/_out/
+.pytest_cache/
+config.toml

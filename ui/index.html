@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gen_Ut</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23a8482a'/%3E%3Cpath d='M9 22V10h9M9 16h7M20 22l3-6 3 6' stroke='%23fffaf4' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="app.css">
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']], processEscapes: false },
+    svg: { fontCache: 'global' },
+    options: { enableMenu: false },
+    startup: { typeset: false }
+  };
+</script>
+<script src="/mathjax.js" defer></script>
+</head>
+<body>
+<header class="kopf">
+  <a class="marke" href="#/"><span class="marke-z">gen_Ut</span><span class="marke-s">Fotos → Lernseiten</span></a>
+  <div class="ki-schalter" role="radiogroup" aria-label="KI für neue Projekte und das geöffnete Projekt">
+    <span class="ki-l">KI</span>
+  </div>
+  <nav><a href="#/">Projekte</a><a href="#/einstellungen">Einstellungen</a></nav>
+</header>
+<main id="app" aria-live="polite"></main>
+<dialog id="dlg"><form method="dialog" id="dlgForm"></form></dialog>
+<div id="toast" role="status" hidden></div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

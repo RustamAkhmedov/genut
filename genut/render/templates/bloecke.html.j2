@@ -1,0 +1,219 @@
+{# Makros für Inhaltsblöcke, Badges und Graphen. Kontext: graphen, bild() #}
+
+{% macro badges(el, ok_zeigen=false) -%}
+{% if el.quelle == 'ki' %}<span class="badge ki" title="Von der KI ergänzt">KI</span>{% endif %}
+{% if el.pruefung %}
+  {% if el.pruefung.status == 'ok' and ok_zeigen %}<span class="badge ok" title="Maschinell nachgerechnet">✓ geprüft</span>{% endif %}
+  {% if el.pruefung.status == 'nicht_pruefbar' %}<span class="badge warn" title="{{ el.pruefung.meldungen | join(' · ') }}">⚠ ungeprüft</span>{% endif %}
+{% endif %}
+{%- endmacro %}
+
+{% macro fehlerbox(el) -%}
+{% if el.pruefung and el.pruefung.status == 'fehler' %}
+<details class="fehlerbox">
+  <summary>⚠ Konnte nicht bestätigt werden – bitte selbst {{ 'nachrechnen' if fach is not defined or fach.profil == 'mathe_nw' else 'kontrollieren' }}</summary>
+  <ul>{% for m in el.pruefung.meldungen %}<li>{{ m }}</li>{% endfor %}</ul>
+</details>
+{% endif %}
+{%- endmacro %}
+
+{% macro graph(b) -%}
+{% if b.id in graphen %}
+<div class="plot" data-graph="{{ b.id }}">
+  <div class="plot-canvas"><canvas width="640" height="400" role="img" aria-label="Funktionsgraph{% for f in b.graph.funktionen %} {{ f.label or f.ausdruck }}{% endfor %}"></canvas></div>
+  <div class="plot-legend">{% for f in b.graph.funktionen %}<span class="lg" style="--c:var(--plot-{{ loop.index0 % 4 + 1 }})">{{ f.label or ('f' ~ loop.index) }}</span>{% endfor %}</div>
+  {% if b.graph.parameter %}
+  <div class="sliders">
+    {% for p in b.graph.parameter %}
+    <label class="slider">
+      <span class="sl-top"><span class="sl-name">{{ p.name }} = <output>{{ p.start }}</output></span>{% if p.bedeutung %}<span class="sl-bed">{{ p.bedeutung }}</span>{% endif %}</span>
+      <input type="range" min="{{ p.min }}" max="{{ p.max }}" step="{{ p.schritt }}" value="{{ p.start }}" data-p="{{ p.name }}">
+    </label>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% else %}
+<p class="plot-fehlt">Der Graph konnte nicht geprüft werden und wird deshalb nicht angezeigt.</p>
+{% endif %}
+{%- endmacro %}
+
+{% macro block(b, anker=true) -%}
+<div class="blk blk-{{ b.typ }}"{% if anker %} id="el-{{ b.id }}"{% endif %} data-el="{{ b.id }}">
+{{ fehlerbox(b) }}
+{% if b.typ == 'text' %}
+  {% if b.quelle == 'ki' %}<div class="blk-meta">{{ badges(b) }}</div>{% endif %}
+  <div class="prose">{{ b.md | md }}</div>
+{% elif b.typ == 'definition' %}
+  <div class="box box-def">
+    <div class="box-k"><span>Definition</span>{{ badges(b) }}</div>
+    <p class="def-t">{{ b.begriff | mdi }}</p>
+    <div class="prose">{{ b.md | md }}</div>
+  </div>
+{% elif b.typ == 'regel' %}
+  <div class="box box-regel">
+    <div class="box-k"><span>Regel</span>{{ badges(b) }}</div>
+    <h3 class="box-t">{{ b.titel | mdi }}</h3>
+    <div class="prose">{{ b.md | md }}</div>
+    {% if b.beispiele %}
+    <div class="beispiele"><div class="eyebrow">Beispiele</div><ul>{% for x in b.beispiele %}<li>{{ x | mdi }}</li>{% endfor %}</ul></div>
+    {% endif %}
+  </div>
+{% elif b.typ == 'formel' %}
+  <figure class="formel">
+    <div class="box-k">{% if b.titel %}<span class="formel-t">{{ b.titel | mdi }}</span>{% endif %}{{ badges(b, true) }}</div>
+    <div class="math-d">\[{{ b.tex | tex }}\]</div>
+    {% if b.variablen %}
+    <dl class="vars">{% for v in b.variablen %}<div><dt>\({{ v.name | tex }}\)</dt><dd>{{ v.bedeutung | mdi }}</dd></div>{% endfor %}</dl>
+    {% endif %}
+    {% if b.erklaerung_md %}<figcaption class="prose">{{ b.erklaerung_md | md }}</figcaption>{% endif %}
+    {% if b.graph %}{{ graph(b) }}{% endif %}
+  </figure>
+{% elif b.typ == 'graph' %}
+  <figure class="graph-blk">
+    <div class="box-k">{% if b.titel %}<span class="formel-t">{{ b.titel | mdi }}</span>{% endif %}{{ badges(b, true) }}</div>
+    {{ graph(b) }}
+    {% if b.erklaerung_md %}<figcaption class="prose">{{ b.erklaerung_md | md }}</figcaption>{% endif %}
+  </figure>
+{% elif b.typ == 'tabelle' %}
+  {% if b.titel or b.quelle == 'ki' %}<div class="box-k">{% if b.titel %}<span class="formel-t">{{ b.titel | mdi }}</span>{% endif %}{{ badges(b) }}</div>{% endif %}
+  <div class="tbl-wrap" tabindex="0"><table>
+    <thead><tr>{% for k in b.kopf %}<th>{{ k | mdi }}</th>{% endfor %}</tr></thead>
+    <tbody>{% for z in b.zeilen %}<tr>{% for c in z %}<td>{{ c | mdi }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+  </table></div>
+{% elif b.typ == 'bild' %}
+  <figure class="bild">
+    {% set src = bild(b) %}
+    {% if src %}<img src="{{ src }}" alt="{{ b.alt }}" loading="lazy">{% else %}<div class="bild-fehlt">Bild fehlt: {{ b.alt }}</div>{% endif %}
+    <figcaption>{% if b.beschriftung %}{{ b.beschriftung | mdi }}{% else %}{{ b.alt }}{% endif %} <span class="badge foto">{{ 'Bild aus der Datei' if b.foto is match('.*-b[0-9]+\\.jpg$') else 'Ausschnitt vom Foto' }}</span></figcaption>
+  </figure>
+{% elif b.typ == 'hinweis' %}
+  <div class="box box-{{ b.art }}">
+    <div class="box-k"><span>{{ 'Tipp' if b.art == 'tipp' else 'Typischer Fehler' }}</span>{{ badges(b) }}</div>
+    <div class="prose">{{ b.md | md }}</div>
+  </div>
+{% elif b.typ == 'code' %}
+  <div class="code"{% if b.erklaerungen %} data-zeilen-code{% endif %}>
+    <div class="code-h"><span>{{ b.sprache }}</span>{{ badges(b) }}<button type="button" class="btn-mini" data-copy>Kopieren</button></div>
+    {% if b.erklaerungen %}<pre><code>{% for z in b.code.split('\n') %}<span class="cl" data-l="{{ loop.index }}">{{ z }}
+</span>{% endfor %}</code></pre>{% else %}<pre><code>{{ b.code }}</code></pre>{% endif %}
+  </div>
+  {% if b.erklaerungen %}
+  <ol class="code-erkl">{% for e in b.erklaerungen %}<li tabindex="0" data-zeilen="{{ e.zeilen }}"><span class="zn">Z. {{ e.zeilen | replace('-', '–') }}</span><div class="prose">{{ e.md | mdi }}</div></li>{% endfor %}</ol>
+  {% endif %}
+  {% if b.erklaerung_md %}<div class="prose">{{ b.erklaerung_md | md }}</div>{% endif %}
+{% elif b.typ == 'befehl' %}
+  <div class="cmd">
+    <div class="code-h"><span>{{ (b.kontext | mdi) if b.kontext else 'Befehl' }}</span>{{ badges(b) }}<button type="button" class="btn-mini" data-copy>Kopieren</button></div>
+    <pre><code>{{ b.befehl }}</code></pre>
+    <div class="prose">{{ b.erklaerung_md | md }}</div>
+  </div>
+{% elif b.typ == 'vokabel' %}
+  <div class="vok"><span class="vok-w">{{ b.wort }}</span><span class="vok-u">{{ b.uebersetzung }}</span>{{ badges(b) }}
+  {% if b.beispiel %}<span class="vok-b">{{ b.beispiel | mdi }}</span>{% endif %}</div>
+{% elif b.typ == 'reaktion' %}
+  <figure class="formel reaktion">
+    <div class="box-k">{% if b.titel %}<span class="formel-t">{{ b.titel | mdi }}</span>{% else %}<span class="formel-t">Reaktionsgleichung</span>{% endif %}{{ badges(b, true) }}</div>
+    <div class="math-d">\[\ce{ {{- b.gleichung | tex -}} }\]</div>
+    {% if b.erklaerung_md %}<figcaption class="prose">{{ b.erklaerung_md | md }}</figcaption>{% endif %}
+  </figure>
+{% elif b.typ == 'struktur' %}
+  {% set s = struktur(b) %}
+  <figure class="formel struktur">
+    <div class="box-k"><span class="formel-t">{{ b.name | mdi }}</span>{{ badges(b, true) }}</div>
+    {% if s.bilder %}
+    <div class="struktur-bilder">
+      {% for z in s.bilder %}<div class="struktur-bild"><div class="struktur-z">{{ z.svg }}</div><span class="struktur-l">{{ z.label }}</span></div>{% endfor %}
+    </div>
+    {% else %}
+    <p class="plot-fehlt">Strukturformel kann nicht gezeichnet werden: {{ s.fehler }}</p>
+    {% endif %}
+    <dl class="struktur-f">
+      <div><dt>Summenformel</dt><dd>\(\ce{ {{- b.summenformel | tex -}} }\)</dd></div>
+      {% if b.halbstruktur %}<div><dt>Halbstrukturformel</dt><dd>\(\ce{ {{- b.halbstruktur | tex -}} }\)</dd></div>{% endif %}
+    </dl>
+    {% if b.erklaerung_md %}<figcaption class="prose">{{ b.erklaerung_md | md }}</figcaption>{% endif %}
+  </figure>
+{% elif b.typ == 'sql' %}
+  <div class="box box-regel sqlb" data-sql>
+    <div class="box-k"><span>{{ 'SQL-Übung' if b.aufgabe_md else 'SQL' }}</span>{% if b.titel %}<span class="formel-t">{{ b.titel | mdi }}</span>{% endif %}{{ badges(b, true) }}</div>
+    {% if b.aufgabe_md %}<div class="prose">{{ b.aufgabe_md | md }}</div>{% endif %}
+    <details class="sql-schema"><summary>Beispieldaten (Tabellen)</summary><pre><code class="sql-schema-code">{{ b.schema_sql }}</code></pre></details>
+    <label class="sr" for="sql-{{ b.id }}{{ '-s' if not anker }}">SQL-Abfrage</label>
+    <textarea class="sql-ed" id="sql-{{ b.id }}{{ '-s' if not anker }}" spellcheck="false" autocapitalize="off" autocomplete="off" rows="{{ [b.abfrage.count('\n') + 2, 3] | max }}" {% if b.aufgabe_md %}placeholder="Deine Abfrage …" data-loesung="{{ b.abfrage }}"{% endif %}>{% if not b.aufgabe_md %}{{ b.abfrage }}{% endif %}</textarea>
+    <div class="sql-ctl">
+      <button type="button" class="btn primary" data-sql-run>Ausführen</button>
+      {% if b.aufgabe_md %}<button type="button" class="btn ghost" data-sql-loesung>Musterlösung zeigen</button>{% endif %}
+      <button type="button" class="btn ghost" data-sql-reset>Zurücksetzen</button>
+      <span class="sql-status" aria-live="polite"></span>
+    </div>
+    <div class="sql-out" data-sql-out>{% if b.ergebnis and not b.aufgabe_md %}{{ sql_tabelle(b.ergebnis) }}{% endif %}</div>
+    {% if b.aufgabe_md and b.ergebnis and not b.ergebnis.fehler %}<details class="sql-schema"><summary>Erwartetes Ergebnis</summary>{{ sql_tabelle(b.ergebnis) }}</details>{% endif %}
+    {% if b.erklaerung_md %}<div class="prose">{{ b.erklaerung_md | md }}</div>{% endif %}
+  </div>
+{% elif b.typ == 'subnetzrechner' %}
+  <div class="box box-regel subnetz" data-subnetz>
+    <div class="box-k"><span>Subnetz-Rechner</span>{% if b.titel %}<span class="formel-t">{{ b.titel | mdi }}</span>{% endif %}{{ badges(b) }}</div>
+    <label class="sn-feld">Adresse mit Präfix (IPv4 oder IPv6)<input class="sn-in" type="text" value="{{ b.start }}" spellcheck="false" autocapitalize="off" autocomplete="off"></label>
+    <p class="sn-fehler" aria-live="polite"></p>
+    <table class="sn-out"><tbody></tbody></table>
+    {% if b.erklaerung_md %}<div class="prose">{{ b.erklaerung_md | md }}</div>{% endif %}
+  </div>
+{% elif b.typ == 'lueckentext' %}
+  <div class="box box-regel lt" data-lueckentext>
+    <div class="box-k"><span>Übung</span>{% if b.titel and b.titel | lower != 'übung' %}<span class="formel-t">{{ b.titel | mdi }}</span>{% endif %}{{ badges(b) }}</div>
+    {% if b.anweisung_md %}<div class="prose lt-anw">{{ b.anweisung_md | md }}</div>{% endif %}
+    <div class="prose">{{ b.text | luecken }}</div>
+    <div class="lt-ctl">
+      <button type="button" class="btn primary" data-lt-pruefen>Prüfen</button>
+      <button type="button" class="btn ghost" data-lt-zeigen>Lösungen zeigen</button>
+      <button type="button" class="btn ghost" data-lt-reset>Zurücksetzen</button>
+      <span class="lt-stand" aria-live="polite"></span>
+    </div>
+  </div>
+{% elif b.typ == 'textsorte' %}
+  <div class="box box-def">
+    <div class="box-k"><span>Textsorte</span>{{ badges(b) }}</div>
+    <h3 class="box-t">{{ b.name | mdi }}</h3>
+    {% if b.zweck_md %}<div class="prose">{{ b.zweck_md | md }}</div>{% endif %}
+    <div class="ts-teil"><h4>Aufbau</h4><ol>{% for x in b.aufbau %}<li>{{ x | mdi }}</li>{% endfor %}</ol></div>
+    {% if b.merkmale %}<div class="ts-teil"><h4>Merkmale</h4><ul>{% for x in b.merkmale %}<li>{{ x | mdi }}</li>{% endfor %}</ul></div>{% endif %}
+    {% if b.formulierungen %}<div class="ts-teil"><h4>Formulierungen</h4><ul class="phrasen">{% for x in b.formulierungen %}<li>{{ x | mdi }}</li>{% endfor %}</ul></div>{% endif %}
+    {% if b.beispiel_md %}<details class="ts-teil"><summary><b>Beispiel</b></summary><div class="prose">{{ b.beispiel_md | md }}</div></details>{% endif %}
+  </div>
+{% elif b.typ == 'werk' %}
+  <div class="box box-regel werk">
+    <div class="box-k"><span>Werk</span>{{ badges(b) }}</div>
+    <p class="werk-t">{{ b.titel }}</p>
+    <p class="werk-m">{{ b.autor }}{% for x in [b.jahr, b.epoche, b.gattung] if x %} · {{ x }}{% endfor %}</p>
+    <div class="prose">{{ b.inhalt_md | md }}</div>
+    {% if b.motive %}<div class="motive">{% for m in b.motive %}<span>{{ m }}</span>{% endfor %}</div>{% endif %}
+    {% if b.zitat %}<blockquote>{{ b.zitat | mdi }}</blockquote>{% endif %}
+  </div>
+{% elif b.typ == 'zeitleiste' %}
+  <div class="zeitleiste">
+    {% if b.titel or b.quelle == 'ki' %}<div class="box-k">{% if b.titel %}<span class="formel-t">{{ b.titel | mdi }}</span>{% endif %}{{ badges(b) }}</div>{% endif %}
+    <ol class="zeit">{% for e in b.eintraege %}<li><span class="z-zeit">{{ e.zeit }}</span><div class="z-b"><b>{{ e.titel | mdi }}</b>{% if e.md %}<div class="prose">{{ e.md | md }}</div>{% endif %}</div></li>{% endfor %}</ol>
+  </div>
+{% elif b.typ == 'klimadiagramm' %}
+  {% set k = klima(b) %}
+  <figure class="formel klima">
+    <div class="box-k"><span class="formel-t">Klimadiagramm {{ b.ort }}</span>{{ badges(b) }}</div>
+    <div class="k-meta">{% if b.lage %}<span>{{ b.lage }}</span>{% endif %}{% if b.klima %}<span>{{ b.klima }}</span>{% endif %}<span>Jahresmittel <b>{{ k.mittel }} °C</b></span><span>Jahresniederschlag <b>{{ k.summe }} mm</b></span></div>
+    {{ k.svg }}
+    <div class="plot-legend"><span class="lg" style="--c:var(--err)">Temperatur (°C)</span><span class="lg lg-balken" style="--c:var(--plot-2)">Niederschlag (mm)</span></div>
+    <details class="klima-t"><summary>Werte als Tabelle</summary><div class="tbl-wrap"><table><thead><tr><th></th>{% for m in k.monate %}<th>{{ m }}</th>{% endfor %}</tr></thead>
+      <tbody><tr><th class="k-temp">°C</th>{% for v in b.temperatur %}<td>{{ k.fmt(v) }}</td>{% endfor %}</tr><tr><th class="k-ns">mm</th>{% for v in b.niederschlag %}<td>{{ k.fmt(v) }}</td>{% endfor %}</tr></tbody></table></div></details>
+    {% if b.erklaerung_md %}<figcaption class="prose">{{ b.erklaerung_md | md }}</figcaption>{% endif %}
+  </figure>
+{% elif b.typ == 'diagramm' %}
+  {% set d = diagramm(b) %}
+  <figure class="formel diagramm">
+    <div class="box-k">{% if b.titel %}<span class="formel-t">{{ b.titel | mdi }}</span>{% else %}<span class="formel-t">Diagramm</span>{% endif %}{{ badges(b) }}</div>
+    {% if d.hell %}<div class="dg-svg dg-hell">{{ d.hell }}</div><div class="dg-svg dg-dunkel">{{ d.dunkel or d.hell }}</div>
+    {% else %}<pre class="dg-quelle"><code>{{ b.mermaid }}</code></pre><p class="dg-hinweis">{% if d.fehler %}Das Diagramm konnte nicht gezeichnet werden: {{ d.fehler }}{% else %}Das Diagramm wird gezeichnet, sobald die Seite einmal in der Vorschau des Tools geöffnet wurde.{% endif %}</p>{% endif %}
+    {% if b.erklaerung_md %}<figcaption class="prose">{{ b.erklaerung_md | md }}</figcaption>{% endif %}
+  </figure>
+{% endif %}
+</div>
+{%- endmacro %}

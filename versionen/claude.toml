@@ -1,0 +1,25 @@
+# gen_Ut – Version: Claude (Claude Code CLI, läuft über dein Claude-Abo)
+# Diese Datei wird beim Einrichten nach config.toml kopiert. Änderungen danach in config.toml.
+
+[server]
+host = "127.0.0.1"   # nur lokal erreichbar
+port = 8765
+
+[modell]
+standard = "claude_code"
+auswahl = ["claude_code", "gemini"]   # KIs im Schalter oben rechts
+
+[claude_code]
+befehl = "claude"
+modell = ""           # leer = Standard der Claude-CLI
+
+[gemini]
+modell = ""           # leer = neuestes Gemini-Flash-Modell (bei Überlastung automatisch ein älteres)
+# Schlüssel NICHT hier, sondern in der Datei .env:  GEMINI_API_KEY=…
+
+[ollama]
+url = "http://localhost:11434"
+modell = "gemma3:4b"  # ~4B-Vision-Modell, läuft auf einem Laptop mit 16 GB RAM ohne Grafikkarte
+
+[pages]
+aktiv = false

@@ -1,0 +1,143 @@
+{
+ "schema_version": 1,
+ "projekt": {
+  "titel": "SQL-Abfragen",
+  "untertitel": "DBI · Gruppieren",
+  "fach": "dbi",
+  "sprache": "de"
+ },
+ "themen": [
+  {
+   "id": "t-00000301",
+   "titel": "GROUP BY und Aggregatfunktionen",
+   "kurz": "Zusammenfassen von Zeilen",
+   "quelle": "foto",
+   "bloecke": [
+    {
+     "id": "b-00000301",
+     "typ": "regel",
+     "quelle": "foto",
+     "titel": "Aggregatfunktionen",
+     "md": "`COUNT`, `SUM`, `AVG`, `MIN`, `MAX` fassen mehrere Zeilen zusammen.",
+     "beispiele": [
+      "`SELECT COUNT(*) FROM schueler`"
+     ],
+     "spick": true
+    },
+    {
+     "id": "b-00000302",
+     "typ": "sql",
+     "quelle": "foto",
+     "titel": "Schüler je Klasse",
+     "schema_sql": "CREATE TABLE schueler(id INTEGER PRIMARY KEY, name TEXT, klasse TEXT, note INTEGER);\nINSERT INTO schueler VALUES (1,'Huber','4A',2),(2,'Maier','4A',1),(3,'Gruber','4B',3),(4,'Wagner','4B',2);",
+     "abfrage": "SELECT klasse, COUNT(*) AS anzahl\nFROM schueler\nGROUP BY klasse\nORDER BY klasse;",
+     "erklaerung_md": "`GROUP BY` bildet eine Gruppe je Klasse."
+    },
+    {
+     "id": "b-00000303",
+     "typ": "sql",
+     "quelle": "ki",
+     "aufgabe_md": "Gib den Notendurchschnitt der Klasse 4B aus.",
+     "schema_sql": "CREATE TABLE schueler(id INTEGER PRIMARY KEY, name TEXT, klasse TEXT, note INTEGER);\nINSERT INTO schueler VALUES (1,'Huber','4A',2),(2,'Maier','4A',1),(3,'Gruber','4B',3),(4,'Wagner','4B',2);",
+     "abfrage": "SELECT AVG(note) AS schnitt FROM schueler WHERE klasse = '4B';"
+    },
+    {
+     "id": "b-00000304",
+     "typ": "sql",
+     "quelle": "ki",
+     "titel": "Absichtlich falsch (Testfall)",
+     "schema_sql": "CREATE TABLE schueler(id INTEGER PRIMARY KEY, name TEXT, klasse TEXT, note INTEGER);\nINSERT INTO schueler VALUES (1,'Huber','4A',2),(2,'Maier','4A',1),(3,'Gruber','4B',3),(4,'Wagner','4B',2);",
+     "abfrage": "SELECT * FROM gibtsnicht;"
+    },
+    {
+     "id": "b-00000305",
+     "typ": "diagramm",
+     "quelle": "ki",
+     "titel": "ER-Diagramm",
+     "mermaid": "erDiagram\n  KLASSE ||--o{ SCHUELER : hat\n  SCHUELER {\n    int id\n    string name\n  }"
+    }
+   ]
+  }
+ ],
+ "aufgaben": [
+  {
+   "id": "a-00000301",
+   "art": "foto",
+   "quelle": "foto",
+   "thema_id": "t-00000301",
+   "titel": "Beste Note je Klasse",
+   "schwierigkeit": 2,
+   "angabe_md": "Gib für jede Klasse die beste Note aus.",
+   "rechenaufgabe": true,
+   "schritte": [
+    {
+     "titel": "Abfrage",
+     "quelle": "ki",
+     "bloecke": [
+      {
+       "id": "b-00000321",
+       "typ": "sql",
+       "quelle": "ki",
+       "schema_sql": "CREATE TABLE schueler(id INTEGER PRIMARY KEY, name TEXT, klasse TEXT, note INTEGER);\nINSERT INTO schueler VALUES (1,'Huber','4A',2),(2,'Maier','4A',1),(3,'Gruber','4B',3),(4,'Wagner','4B',2);",
+       "abfrage": "SELECT klasse, MIN(note) FROM schueler GROUP BY klasse;"
+      }
+     ]
+    }
+   ],
+   "ergebnis": {
+    "md": "4A: 1, 4B: 2",
+    "check": {
+     "art": "sql",
+     "schema_sql": "CREATE TABLE schueler(id INTEGER PRIMARY KEY, name TEXT, klasse TEXT, note INTEGER);\nINSERT INTO schueler VALUES (1,'Huber','4A',2),(2,'Maier','4A',1),(3,'Gruber','4B',3),(4,'Wagner','4B',2);",
+     "abfrage": "SELECT klasse, MIN(note) FROM schueler GROUP BY klasse;",
+     "erwartet": [
+      [
+       "4A",
+       "1"
+      ],
+      [
+       "4B",
+       "2"
+      ]
+     ],
+     "reihenfolge": false
+    }
+   }
+  }
+ ],
+ "karten": [
+  {
+   "id": "k-00000301",
+   "thema_id": "t-00000301",
+   "quelle": "ki",
+   "vorne_md": "Wofür steht `HAVING`?",
+   "hinten_md": "Filtert Gruppen nach dem Gruppieren."
+  }
+ ],
+ "quiz": [
+  {
+   "id": "q-00000301",
+   "thema_id": "t-00000301",
+   "quelle": "ki",
+   "art": "mc",
+   "frage_md": "Welche Klausel filtert **Gruppen**?",
+   "optionen": [
+    "`WHERE`",
+    "`HAVING`",
+    "`ORDER BY`",
+    "`LIMIT`"
+   ],
+   "richtig": 1,
+   "erklaerung_md": "`WHERE` filtert Zeilen vor, `HAVING` Gruppen nach dem Gruppieren."
+  },
+  {
+   "id": "q-00000302",
+   "thema_id": "t-00000301",
+   "quelle": "ki",
+   "art": "wahrfalsch",
+   "frage_md": "`COUNT(*)` zählt auch Zeilen mit NULL-Werten.",
+   "wahr": true,
+   "erklaerung_md": "`COUNT(*)` zählt alle Zeilen."
+  }
+ ]
+}

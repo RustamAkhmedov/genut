@@ -1,0 +1,260 @@
+{% import 'bloecke.html.j2' as B with context %}
+{% set icon_chev %}<svg class="chev" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>{% endset %}
+<!doctype html>
+<html lang="{{ p.sprache }}" data-profil="{{ fach.profil }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="generator" content="gen_Ut">
+<meta name="theme-color" content="#f5efe4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1b1714" media="(prefers-color-scheme: dark)">
+<title>{{ p.titel }}</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23a8482a'/%3E%3Cpath d='M8 9h7a3 3 0 0 1 3 3v11a3 3 0 0 0-3-3H8zM24 9h-3a3 3 0 0 0-3 3' stroke='%23fffaf4' stroke-width='2' fill='none' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>{{ font_css }}</style>
+<style>{{ css }}</style>
+<!--MATH-STYLE-->
+</head>
+<body>
+<a class="skip" href="#main">Zum Inhalt springen</a>
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="#start"><span class="brand-t">{{ p.titel }}</span>{% if p.untertitel %}<span class="brand-s">{{ p.untertitel }}</span>{% endif %}</a>
+    <nav class="topnav" aria-label="Bereiche">
+      <a href="#start" data-tab="start">Start</a>
+      <a href="#lernen" data-tab="lernen">Lernen</a>
+      <a href="#aufgaben" data-tab="aufgaben">Aufgaben</a>
+      <a href="#karten" data-tab="karten">Karten</a>
+      <a href="#quiz" data-tab="quiz">Quiz</a>
+      <a href="#spick" data-tab="spick">Spickzettel</a>
+    </nav>
+    <button type="button" class="iconbtn" id="themeBtn" aria-label="Farbschema: automatisch" title="Farbschema wechseln">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>
+      <span class="theme-l" id="themeLabel">Auto</span>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+<!--MATH-START-->
+
+<!-- ===================== START ===================== -->
+<section class="view" id="v-start" data-view="start">
+  <div class="hero">
+    <div class="eyebrow">{{ fach.name }}</div>
+    <h1>{{ p.titel }}</h1>
+    {% if p.untertitel %}<p class="lead">{{ p.untertitel }}</p>{% endif %}
+  </div>
+
+  <div class="card progress-card">
+    <div class="pc-top"><span class="eyebrow">Dein Fortschritt</span><span class="pc-num" id="progressText">0 %</span></div>
+    <div class="bar" aria-hidden="true"><span id="progressBar"></span></div>
+    <p class="pc-sub" id="progressSub">Noch nichts erledigt – fang mit dem ersten Thema an.</p>
+  </div>
+
+  <h2 class="sec-h">Themen</h2>
+  <div class="tiles">
+    {% for t in themen %}
+    <a class="tile" href="#thema-{{ t.id }}" data-thema-tile="{{ t.id }}">
+      <span class="tile-n">{{ loop.index }}</span>
+      <span class="tile-b"><b>{{ t.titel | mdi }}</b>{% if t.kurz %}<span>{{ t.kurz | mdi }}</span>{% endif %}</span>
+      <span class="tile-s" data-state="{{ t.id }}">offen</span>
+    </a>
+    {% else %}
+    <p class="leer">Noch keine Themen.</p>
+    {% endfor %}
+  </div>
+
+  <h2 class="sec-h">Üben</h2>
+  <div class="tiles tiles-3">
+    <a class="tile tile-ueben" href="#aufgaben"><span class="tile-b"><b>Aufgaben</b><span>{{ aufgaben | length }} mit Lösungsweg</span></span>{{ icon_chev }}</a>
+    <a class="tile tile-ueben" href="#karten"><span class="tile-b"><b>Karteikarten</b><span>{{ (karten | length) + (vokabeln | length) }} Karten</span></span>{{ icon_chev }}</a>
+    <a class="tile tile-ueben" href="#quiz"><span class="tile-b"><b>Quiz</b><span>{{ quiz | length }} Fragen</span></span>{{ icon_chev }}</a>
+    <a class="tile tile-ueben" href="#spick"><span class="tile-b"><b>Spickzettel</b><span>Alles Wichtige auf einer Seite</span></span>{{ icon_chev }}</a>
+  </div>
+
+  <p class="legende"><span class="badge ki">KI</span> von der KI ergänzt · <span class="badge ok">✓ geprüft</span> maschinell nachgerechnet · <span class="badge warn">⚠ ungeprüft</span> selbst kontrollieren</p>
+</section>
+
+<!-- ===================== THEMEN ===================== -->
+{% for t in themen %}
+{% set nA = aufgaben | selectattr('thema_id', 'equalto', t.id) | list | length %}
+<section class="view" id="v-thema-{{ t.id }}" data-view="thema-{{ t.id }}" data-thema="{{ t.id }}" hidden>
+  <div class="hero">
+    <div class="eyebrow">Thema {{ loop.index }} von {{ themen | length }}{% if t.quelle == 'ki' %} · <span class="badge ki">KI</span>{% endif %}</div>
+    <h1>{{ t.titel | mdi }}</h1>
+    {% if t.kurz %}<p class="lead">{{ t.kurz | mdi }}</p>{% endif %}
+  </div>
+  <div class="stack">
+    {% for b in t.bloecke %}{{ B.block(b) }}{% endfor %}
+  </div>
+  <div class="thema-ende">
+    <button type="button" class="btn primary" data-gelesen="{{ t.id }}">Als gelesen markieren</button>
+    {% if nA %}<a class="btn" href="#aufgaben/{{ t.id }}">{{ nA }} Aufgabe{{ 'n' if nA != 1 }} dazu üben</a>{% endif %}
+    {% if not loop.last %}<a class="btn ghost" href="#thema-{{ themen[loop.index].id }}">Nächstes Thema: {{ themen[loop.index].titel | mdi }}</a>{% endif %}
+  </div>
+</section>
+{% endfor %}
+
+<!-- ===================== AUFGABEN ===================== -->
+<section class="view" id="v-aufgaben" data-view="aufgaben" hidden>
+  <div class="hero">
+    <div class="eyebrow">Üben</div>
+    <h1>Aufgaben mit Lösungsweg</h1>
+    <p class="lead">Erst selbst auf Papier rechnen, dann Schritt für Schritt aufdecken.</p>
+  </div>
+  <div class="filter" role="group" aria-label="Aufgaben filtern">
+    <label class="sel"><span class="sr">Thema</span>
+      <select id="aufgThema"><option value="">Alle Themen</option>{% for t in themen %}<option value="{{ t.id }}">{{ t.titel | striptags }}</option>{% endfor %}</select>
+    </label>
+    <div class="chips">
+      <button type="button" class="chip" data-art="" aria-pressed="true">Alle</button>
+      <button type="button" class="chip" data-art="foto" aria-pressed="false">Vom Foto</button>
+      <button type="button" class="chip" data-art="probe" aria-pressed="false">Probe</button>
+    </div>
+  </div>
+  <div class="stack" id="aufgListe">
+    {% for a in aufgaben %}
+    <details class="task" id="el-{{ a.id }}" data-el="{{ a.id }}" data-thema="{{ a.thema_id }}" data-art="{{ a.art }}">
+      <summary>
+        <span class="no">{{ loop.index }}</span>
+        <span class="ttl"><b>{{ a.titel | mdi }}</b>
+          <span class="meta">{{ (thema[a.thema_id].titel if a.thema_id in thema else '') | striptags }} · {{ 'vom Foto' if a.art == 'foto' else 'Probeaufgabe' }} · <span class="diff" aria-label="Schwierigkeit {{ a.schwierigkeit }} von 3">{% for i in range(3) %}<i class="{{ 'on' if i < a.schwierigkeit }}"></i>{% endfor %}</span></span>
+        </span>
+        <span class="task-badges">{{ B.badges(a) }}{% if a.pruefung and a.pruefung.status == 'fehler' %}<span class="badge err">⚠</span>{% endif %}</span>
+        <span class="done-mark" aria-hidden="true">✓</span>
+        {{ icon_chev }}
+      </summary>
+      <div class="body">
+        {{ B.fehlerbox(a) }}
+        <div class="given"><div class="eyebrow">Angabe</div><div class="prose">{{ a.angabe_md | md }}</div></div>
+        <div class="steps" data-reveal>
+          {% for s in a.schritte %}
+          <div class="step"><div class="eyebrow">Schritt {{ loop.index }} · {{ s.titel | mdi }}{% if s.quelle == 'ki' and a.quelle == 'foto' %} <span class="badge ki">KI</span>{% endif %}</div>
+            {% for b in s.bloecke %}{{ B.block(b) }}{% endfor %}
+          </div>
+          {% endfor %}
+          <div class="step step-erg"><div class="eyebrow">Ergebnis {{ B.badges({'quelle': 'foto', 'pruefung': a.pruefung}, true) }}</div><div class="prose">{{ a.ergebnis.md | md }}</div></div>
+        </div>
+        <div class="task-foot"><button type="button" class="btn" data-geloest="{{ a.id }}">Selbst gelöst</button></div>
+      </div>
+    </details>
+    {% else %}
+    <p class="leer">Noch keine Aufgaben.</p>
+    {% endfor %}
+    <p class="leer" id="aufgLeer" hidden>Keine Aufgaben für diesen Filter.</p>
+  </div>
+</section>
+
+<!-- ===================== KARTEN ===================== -->
+<section class="view" id="v-karten" data-view="karten" hidden>
+  <div class="hero">
+    <div class="eyebrow">Wiederholen</div>
+    <h1>Karteikarten</h1>
+    <p class="lead">Tippen zum Umdrehen. „Nochmal“ legt die Karte ein Stück weiter nach hinten.</p>
+  </div>
+  {% if karten or vokabeln %}
+  <div class="filter">
+    <label class="sel"><span class="sr">Thema</span>
+      <select id="kartThema"><option value="">Alle Themen</option>{% for t in themen %}<option value="{{ t.id }}">{{ t.titel | striptags }}</option>{% endfor %}</select>
+    </label>
+    <span class="kmeta"><span id="cardPos">1 / 1</span> · <span id="cardKnown">0 gewusst</span></span>
+  </div>
+  <div class="flash" id="flash" tabindex="0" role="button" aria-label="Karte umdrehen">
+    <div class="inner">
+      <div class="face front"><span class="eyebrow" id="cardTopic"></span><div class="fq" id="cardFront"></div><span class="hint">Tippen zum Umdrehen</span></div>
+      <div class="face back"><span class="eyebrow">Antwort</span><div class="fa" id="cardBack"></div></div>
+    </div>
+  </div>
+  <div class="btn-row">
+    <button class="btn" type="button" id="cardAgain">Nochmal</button>
+    <button class="btn primary" type="button" id="cardOk">Gewusst</button>
+    <button class="btn ghost" type="button" id="cardShuffle">Mischen</button>
+  </div>
+  <div id="cardBank" hidden>
+    {% for k in karten %}
+    <div class="fc" id="el-{{ k.id }}" data-el="{{ k.id }}" data-k="{{ k.id }}" data-thema="{{ k.thema_id }}" data-thema-titel="{{ (thema[k.thema_id].titel if k.thema_id in thema else '') | striptags }}">
+      <div class="f">{{ B.fehlerbox(k) }}{{ k.vorne_md | md }}{{ B.badges(k) }}</div>
+      <div class="b">{{ k.hinten_md | md }}</div>
+    </div>
+    {% endfor %}
+    {% for t, b in vokabeln %}
+    <div class="fc" data-k="v-{{ b.id }}" data-thema="{{ t.id }}" data-thema-titel="{{ t.titel | striptags }} · Vokabel">
+      <div class="f"><p><b>{{ b.wort }}</b></p></div>
+      <div class="b"><p>{{ b.uebersetzung }}</p>{% if b.beispiel %}<p class="vok-b">{{ b.beispiel | mdi }}</p>{% endif %}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="leer">Noch keine Karteikarten.</p>
+  {% endif %}
+</section>
+
+<!-- ===================== QUIZ ===================== -->
+<section class="view" id="v-quiz" data-view="quiz" hidden>
+  <div class="hero">
+    <div class="eyebrow">Üben</div>
+    <h1>Quiz</h1>
+    <p class="lead">Falsch beantwortete Fragen kommen am Ende nochmal.</p>
+  </div>
+  {% if quiz %}
+  <div class="filter">
+    <label class="sel"><span class="sr">Thema</span>
+      <select id="quizThema"><option value="">Alle Themen</option>{% for t in themen %}<option value="{{ t.id }}">{{ t.titel | striptags }}</option>{% endfor %}</select>
+    </label>
+    <span class="kmeta" id="quizStand"></span>
+  </div>
+  <div class="qz-bar" aria-hidden="true"><span id="quizBar"></span></div>
+  <div class="quiz-card" id="quizKarte" aria-live="polite"></div>
+  <div id="quizBank" hidden>
+    {% for q in quiz %}
+    <div class="qz" id="el-{{ q.id }}" data-el="{{ q.id }}" data-q="{{ q.id }}" data-thema="{{ q.thema_id }}" data-art="{{ q.art }}"
+         data-thema-titel="{{ (thema[q.thema_id].titel if q.thema_id in thema else '') | striptags }}"
+         {% if q.art == 'mc' %}data-richtig="{{ q.richtig if q.richtig is not none else 0 }}"{% else %}data-wahr="{{ 'true' if q.wahr else 'false' }}"{% endif %}>
+      <div class="qf">{{ B.fehlerbox(q) }}{{ q.frage_md | md }}<span class="qz-badges">{{ B.badges(q, true) }}</span></div>
+      {% for o in q.optionen %}<div class="qo">{{ o | md }}</div>{% endfor %}
+      <div class="qe">{{ q.erklaerung_md | md }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="leer">Noch keine Quizfragen.</p>
+  {% endif %}
+</section>
+
+<!-- ===================== SPICK ===================== -->
+<section class="view view-wide" id="v-spick" data-view="spick" hidden>
+  <div class="hero">
+    <div class="eyebrow">Zum Wiederholen</div>
+    <h1>Spickzettel</h1>
+    <p class="lead">Die wichtigsten Formeln, Definitionen und Regeln auf einer Seite.</p>
+    <button type="button" class="btn ghost no-print" id="printBtn">Drucken</button>
+  </div>
+  <div class="spick">
+    {% for t, bl in spick %}
+    <section class="spick-t">
+      <h2>{{ t.titel | mdi }}</h2>
+      {% for b in bl %}{{ B.block(b, false) }}{% endfor %}
+    </section>
+    {% else %}
+    <p class="leer">Noch nichts für den Spickzettel markiert.</p>
+    {% endfor %}
+  </div>
+</section>
+
+<!--MATH-END-->
+</main>
+
+<nav class="tabbar" aria-label="Bereiche">
+  <a href="#start" data-tab="start"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11l8-6 8 6v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></svg><span>Start</span></a>
+  <a href="#lernen" data-tab="lernen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h6a2 2 0 0 1 2 2v12a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v12a2 2 0 0 1 2-2h6z"/></svg><span>Lernen</span></a>
+  <a href="#aufgaben" data-tab="aufgaben"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4h8M6 8h12v12H6zM9 13l2 2 4-4"/></svg><span>Aufgaben</span></a>
+  <a href="#karten" data-tab="karten"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h11a1 1 0 0 1 1 1v13M4 7h11a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg><span>Karten</span></a>
+  <a href="#quiz" data-tab="quiz"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14M12 17.2v.1"/></svg><span>Quiz</span></a>
+  <a href="#spick" data-tab="spick"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 12h7M9 16h7"/></svg><span>Spick</span></a>
+</nav>
+
+<script type="application/json" id="genutDaten">{{ daten_json }}</script>
+{% if sqljs %}<script>{{ sqljs }}</script>{% endif %}
+<script>{{ js }}</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+{
+ "schema_version": 1,
+ "projekt": {
+  "titel": "Klassen und Objekte",
+  "untertitel": "POS · 4. Jahrgang",
+  "fach": "pos",
+  "sprache": "de"
+ },
+ "themen": [
+  {
+   "id": "t-00000201",
+   "titel": "Klassen in Java",
+   "kurz": "Attribute, Methoden, Kapselung",
+   "quelle": "foto",
+   "bloecke": [
+    {
+     "id": "b-00000201",
+     "typ": "definition",
+     "quelle": "foto",
+     "begriff": "Kapselung",
+     "md": "Attribute sind `private`, Zugriff nur über Methoden (Getter/Setter).",
+     "spick": true
+    },
+    {
+     "id": "b-00000202",
+     "typ": "code",
+     "quelle": "foto",
+     "sprache": "java",
+     "code": "public class Zaehler {\n    private int wert = 0;\n\n    public void erhoehen() {\n        wert++;\n    }\n\n    public int getWert() {\n        return wert;\n    }\n}",
+     "erklaerungen": [
+      {
+       "zeilen": "1",
+       "md": "Öffentliche Klasse `Zaehler`."
+      },
+      {
+       "zeilen": "2",
+       "md": "Privates Attribut, startet bei 0."
+      },
+      {
+       "zeilen": "4-6",
+       "md": "Methode erhöht den Wert um 1."
+      },
+      {
+       "zeilen": "8-10",
+       "md": "Getter gibt den aktuellen Wert zurück."
+      }
+     ]
+    },
+    {
+     "id": "b-00000203",
+     "typ": "hinweis",
+     "quelle": "ki",
+     "art": "falle",
+     "md": "Strings mit `equals` vergleichen, nicht mit `==`."
+    },
+    {
+     "id": "b-00000204",
+     "typ": "diagramm",
+     "quelle": "ki",
+     "titel": "Klassendiagramm",
+     "mermaid": "classDiagram\n  class Zaehler {\n    -int wert\n    +erhoehen() void\n    +getWert() int\n  }"
+    }
+   ]
+  },
+  {
+   "id": "t-00000202",
+   "titel": "Schleifen",
+   "kurz": "for und while",
+   "quelle": "ki",
+   "bloecke": [
+    {
+     "id": "b-00000211",
+     "typ": "code",
+     "quelle": "ki",
+     "sprache": "java",
+     "code": "for (int i = 0; i < 3; i++) {\n    System.out.println(i * 2);\n}"
+    },
+    {
+     "id": "b-00000212",
+     "typ": "befehl",
+     "quelle": "ki",
+     "befehl": "javac Main.java && java Main",
+     "erklaerung_md": "Kompilieren und ausführen.",
+     "kontext": "bash"
+    }
+   ]
+  }
+ ],
+ "aufgaben": [
+  {
+   "id": "a-00000201",
+   "art": "foto",
+   "quelle": "foto",
+   "thema_id": "t-00000201",
+   "titel": "Getter schreiben",
+   "schwierigkeit": 2,
+   "angabe_md": "Schreibe einen Getter für das Attribut `name`.",
+   "rechenaufgabe": false,
+   "schritte": [
+    {
+     "titel": "Lösung",
+     "quelle": "ki",
+     "bloecke": [
+      {
+       "id": "b-00000221",
+       "typ": "code",
+       "quelle": "ki",
+       "sprache": "java",
+       "code": "public String getName() {\n    return name;\n}"
+      }
+     ]
+    }
+   ],
+   "ergebnis": {
+    "md": "Methode `getName()` gibt `name` zurück.",
+    "check": null
+   }
+  }
+ ],
+ "karten": [
+  {
+   "id": "k-00000201",
+   "thema_id": "t-00000201",
+   "quelle": "ki",
+   "vorne_md": "Was bedeutet `private`?",
+   "hinten_md": "Nur innerhalb der Klasse sichtbar."
+  }
+ ],
+ "quiz": [
+  {
+   "id": "q-00000201",
+   "thema_id": "t-00000202",
+   "quelle": "ki",
+   "art": "mc",
+   "frage_md": "Was gibt dieses Programm aus?\n\n```java\nfor (int i = 0; i < 3; i++) {\n    System.out.print(i * 2 + \" \");\n}\n```",
+   "optionen": [
+    "`0 2 4`",
+    "`2 4 6`",
+    "`0 1 2`",
+    "`0 2 4 6`"
+   ],
+   "richtig": 0,
+   "erklaerung_md": "i läuft von 0 bis 2, ausgegeben wird i·2."
+  },
+  {
+   "id": "q-00000202",
+   "thema_id": "t-00000201",
+   "quelle": "ki",
+   "art": "wahrfalsch",
+   "frage_md": "Ein `private`-Attribut kann von jeder anderen Klasse direkt gelesen werden.",
+   "wahr": false,
+   "erklaerung_md": "`private` ist nur innerhalb der eigenen Klasse sichtbar."
+  },
+  {
+   "id": "q-00000203",
+   "thema_id": "t-00000201",
+   "quelle": "ki",
+   "art": "mc",
+   "frage_md": "Wo ist der Fehler?\n\n```java\nString a = \"Hallo\";\nif (a == \"Hallo\") { }\n```",
+   "optionen": [
+    "Strings mit `==` vergleichen",
+    "Fehlendes Semikolon",
+    "`String` klein geschrieben",
+    "Kein Fehler"
+   ],
+   "richtig": 0,
+   "erklaerung_md": "`==` vergleicht Referenzen; richtig ist `a.equals(\"Hallo\")`. Template: `${x}` ist kein Java."
+  }
+ ]
+}

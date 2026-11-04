@@ -1,0 +1,172 @@
+{
+ "schema_version": 1,
+ "projekt": {
+  "titel": "Past Simple & Formal Letters",
+  "untertitel": "Englisch · 4. Jahrgang",
+  "fach": "englisch",
+  "sprache": "de"
+ },
+ "themen": [
+  {
+   "id": "t-00000501",
+   "titel": "Past Simple",
+   "kurz": "Abgeschlossene Handlungen in der Vergangenheit",
+   "quelle": "foto",
+   "bloecke": [
+    {
+     "id": "b-00000501",
+     "typ": "regel",
+     "quelle": "foto",
+     "titel": "Bildung",
+     "md": "Regelmäßige Verben: Grundform + *-ed*. Verneinung mit *didn't* + Grundform.",
+     "beispiele": [
+      "I *worked* yesterday.",
+      "She *didn't go* to school."
+     ],
+     "spick": true
+    },
+    {
+     "id": "b-00000502",
+     "typ": "lueckentext",
+     "quelle": "ki",
+     "titel": "Übung",
+     "anweisung_md": "Setze das Verb im Past Simple ein.",
+     "text": "Yesterday I [[played]] football. We [[didn't win|did not win]] the match. Then we [[went]] home."
+    },
+    {
+     "id": "b-00000503",
+     "typ": "vokabel",
+     "quelle": "foto",
+     "wort": "to achieve",
+     "uebersetzung": "erreichen",
+     "beispiel": "She achieved her goal."
+    },
+    {
+     "id": "b-00000504",
+     "typ": "vokabel",
+     "quelle": "foto",
+     "wort": "reliable",
+     "uebersetzung": "zuverlässig"
+    },
+    {
+     "id": "b-00000505",
+     "typ": "lueckentext",
+     "quelle": "ki",
+     "titel": "Absichtlich falsch (Testfall)",
+     "text": "Kein einziges Feld."
+    }
+   ]
+  },
+  {
+   "id": "t-00000502",
+   "titel": "Formal Letter",
+   "kurz": "Aufbau eines formellen Briefs",
+   "quelle": "foto",
+   "bloecke": [
+    {
+     "id": "b-00000511",
+     "typ": "textsorte",
+     "quelle": "foto",
+     "name": "Formal Letter",
+     "zweck_md": "Bewerbung, Beschwerde oder Anfrage an eine Firma.",
+     "aufbau": [
+      "Sender's address",
+      "Date",
+      "Recipient's address",
+      "Salutation: *Dear Sir or Madam,*",
+      "Body",
+      "Closing: *Yours faithfully,*"
+     ],
+     "merkmale": [
+      "Keine Kurzformen",
+      "Höflicher, sachlicher Ton"
+     ],
+     "formulierungen": [
+      "I am writing to …",
+      "I look forward to hearing from you."
+     ]
+    },
+    {
+     "id": "b-00000512",
+     "typ": "werk",
+     "quelle": "ki",
+     "titel": "Animal Farm",
+     "autor": "George Orwell",
+     "jahr": "1945",
+     "gattung": "Fabel",
+     "inhalt_md": "Tiere vertreiben den Bauern, doch die Schweine werden zu neuen Herrschern.",
+     "motive": [
+      "Macht",
+      "Propaganda"
+     ],
+     "zitat": "All animals are equal, but some animals are more equal than others."
+    }
+   ]
+  }
+ ],
+ "aufgaben": [
+  {
+   "id": "a-00000501",
+   "art": "foto",
+   "quelle": "foto",
+   "thema_id": "t-00000502",
+   "titel": "Write a complaint",
+   "schwierigkeit": 2,
+   "angabe_md": "Write a formal letter complaining about a late delivery.",
+   "rechenaufgabe": false,
+   "schritte": [
+    {
+     "titel": "Musterlösung",
+     "quelle": "ki",
+     "bloecke": [
+      {
+       "id": "b-00000521",
+       "typ": "text",
+       "quelle": "ki",
+       "md": "Dear Sir or Madam, I am writing to complain …"
+      }
+     ]
+    }
+   ],
+   "ergebnis": {
+    "md": "Siehe Musterlösung.",
+    "check": null
+   }
+  }
+ ],
+ "karten": [
+  {
+   "id": "k-00000501",
+   "thema_id": "t-00000501",
+   "quelle": "ki",
+   "vorne_md": "Past Simple von *go*?",
+   "hinten_md": "*went*"
+  }
+ ],
+ "quiz": [
+  {
+   "id": "q-00000501",
+   "thema_id": "t-00000501",
+   "quelle": "ki",
+   "art": "mc",
+   "frage_md": "Choose the correct sentence.",
+   "optionen": [
+    "She didn't went home.",
+    "She didn't go home.",
+    "She not went home.",
+    "She don't go home."
+   ],
+   "richtig": 1,
+   "erklaerung_md": "Nach *didn't* steht die Grundform."
+  },
+  {
+   "id": "q-00000502",
+   "thema_id": "t-00000502",
+   "quelle": "ki",
+   "art": "wahrfalsch",
+   "frage_md": "In a formal letter you should use contractions like *I'm*.",
+   "wahr": false,
+   "erklaerung_md": "Formelle Briefe vermeiden Kurzformen."
+  }
+ ]
+}
