@@ -9,7 +9,7 @@ FACH = {"mathe": "Mathematik", "netzwerk": "Netzwerktechnik", "englisch": "Engli
 
 
 def index_html(seiten: list[dict]) -> str:
-    css = (ASSETS / "seite.css").read_text()
+    css = (ASSETS / "seite.css").read_text(encoding="utf-8")
     kacheln = []
     for s in seiten:
         e = html.escape

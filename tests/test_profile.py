@@ -15,7 +15,7 @@ PROFILE = ["naturwiss", "programmieren", "datenbanken", "netzwerk", "sprachen", 
 
 
 def laden(name: str) -> Dokument:
-    return Dokument.model_validate_json((FIX / name / "inhalt.json").read_text())
+    return Dokument.model_validate_json((FIX / name / "inhalt.json").read_text(encoding="utf-8"))
 
 
 def _absichtlich_falsch(doc: Dokument) -> set[str]:
@@ -103,7 +103,7 @@ def test_profil_seite_im_browser(name, tmp_path):
     ziel = tmp_path / "index.html"
     info = rendern(doc, None, name, ziel)
     assert "TeX-Fehler: 0" in info["log"]
-    h = ziel.read_text()
+    h = ziel.read_text(encoding="utf-8")
     assert f'data-profil="{faecher.profil_von(doc.projekt.fach)}"' in h
     assert shot.pruefen(ziel) == []
 
@@ -148,7 +148,7 @@ def test_diagramm_api(projekte):
     assert c.put(f"/api/projekte/{slug}/diagramme/{h}", json={"hell": "kein svg"}).status_code == 400
     assert c.get(f"/api/projekte/{slug}/diagramme/offen").json() == []
     assert c.post(f"/api/projekte/{slug}/neu_bauen").status_code == 200
-    seite = p.ausgabe.read_text()
+    seite = p.ausgabe.read_text(encoding="utf-8")
     teil = seite.split('class="dg-svg dg-hell">')[1][:400]
     assert "Zaehler" in teil and "<script" not in teil and "onload" not in teil and "javascript:" not in teil
     assert "min-width:260px" in teil

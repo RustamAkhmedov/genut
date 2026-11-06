@@ -39,7 +39,7 @@ gen_Ut ist überall dasselbe Programm. Die Versionen unterscheiden sich nur dari
 | Daten | gehen an Anthropic | gehen an Google | bleiben auf deinem Computer |
 | Datei | `versionen/claude.toml` | `versionen/gemini.toml` | `versionen/lokal.toml` |
 
-**Was bedeutet „20 Anfragen pro Tag“ bei Gemini?** Eine Lernseite aus Dateien (docx, pdf, pptx …) braucht meist **1 Anfrage**. Aus Fotos kommt **1 Anfrage pro Foto** fürs Abschreiben dazu. gen_Ut wechselt automatisch zum nächsten Gemini-Modell, wenn eines überlastet ist oder sein Tageslimit erreicht hat. Realistisch sind damit etwa **10–20 Lernseiten aus Dateien** oder **5–10 aus Foto-Sätzen** pro Tag möglich.
+**Was bedeutet „20 Anfragen pro Tag“ bei Gemini?** Eine Lernseite aus Dateien (docx, pdf, pptx …) braucht meist **1 Anfrage**. Aus Fotos kommt **1 Anfrage pro Foto** fürs Abschreiben dazu. Liefert die KI weniger Quizfragen, Karteikarten oder Probeaufgaben als eingestellt, fordert gen_Ut **einmal** gezielt nach (1 Anfrage mehr). gen_Ut wechselt automatisch zum nächsten Gemini-Modell, wenn eines überlastet ist oder sein Tageslimit erreicht hat. Realistisch sind damit etwa **10–20 Lernseiten aus Dateien** oder **5–10 aus Foto-Sätzen** pro Tag möglich.
 
 **Welche soll ich nehmen?** Wenn du Claude Pro hast, nimm **Claude** und schalte für Kleinigkeiten auf Gemini um. Sonst nimm **Gemini**. **Lokal** ist für dich, wenn nichts deinen Computer verlassen soll.
 
@@ -168,7 +168,7 @@ Je genauer das Transkript, desto besser die Lernseite. Die KI erfindet nichts da
 
 ### 4. Generieren
 
-Auf **Generieren** klicken. Die KI erstellt Themen, Erklärungen, Lösungswege, Probeaufgaben, Karteikarten und Quizfragen. Danach prüft das Programm alles nach (siehe [unten](#was-das-programm-nachprüft)). Fehler schickt es zur Korrektur an die KI zurück. Den Fortschritt siehst du live.
+Auf **Generieren** klicken. Die KI erstellt Themen, Erklärungen, Lösungswege, Probeaufgaben, Karteikarten und Quizfragen. Fehlt im Vergleich zu deinen Einstellungen etwas (z. B. nur 3 statt 5 Quizfragen bei einem Thema), fordert das Programm es einmal gezielt nach. Danach prüft das Programm alles nach (siehe [unten](#was-das-programm-nachprüft)). Fehler schickt es zur Korrektur an die KI zurück. Den Fortschritt siehst du live.
 
 ### 5. Vorschau und Feinschliff
 

@@ -20,6 +20,8 @@ class FakeModell:
 
     def json(self, prompt, schema, bilder):
         self.prompts.append(prompt)
+        if not self.jsons and "## Auftrag: Fehlende Inhalte nachliefern" in prompt:
+            return {}            # Nachforderung ohne vorbereitete Antwort: nichts nachliefern
         return self.jsons.pop(0)
 
 
@@ -78,7 +80,7 @@ def test_ungueltige_antwort_wird_einmal_wiederholt(projekte):
     pl = Pipeline(p, modell=m)
     pl.foto_status("001.jpg", "kontrolliert")
     pl.generieren()
-    assert "Deine letzte Antwort war ungültig" in m.prompts[-1]
+    assert "Deine letzte Antwort war ungültig" in m.prompts[1]          # 2. Versuch (danach ggf. Nachfordern)
     assert p.inhalt().themen[0].titel == "A"
 
 
@@ -86,7 +88,7 @@ def test_fotos_ergaenzen_aendert_bestand_nicht(projekte):
     p = Projekt.anlegen("Ergänzen")
     shutil.copy(FIX / "fotos" / "001.jpg", p.fotos / "001.jpg")
     from genut.schema import Dokument
-    doc = Dokument.model_validate_json((FIX / "inhalt.json").read_text())
+    doc = Dokument.model_validate_json((FIX / "inhalt.json").read_text(encoding="utf-8"))
     p.inhalt_speichern(doc)
     m0 = p.meta()
     from genut.schema import FotoEintrag

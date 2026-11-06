@@ -34,7 +34,7 @@ def test_rendern_offline(doc, tmp_path):
     pruefe(doc, set(elemente(doc)), FIX / "fotos")
     ziel = tmp_path / "index.html"
     info = rendern(doc, FIX / "fotos", "integral", ziel)
-    h = ziel.read_text()
+    h = ziel.read_text(encoding="utf-8")
     assert info["bytes"] < 3 * 1024 * 1024
     assert "mjx-container" in h
     assert not re.search(r"\\\(", h.split("<script")[0])  # alle Inline-Formeln vorgerendert

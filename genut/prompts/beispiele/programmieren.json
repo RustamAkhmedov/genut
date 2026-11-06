@@ -1,0 +1,47 @@
+{
+  "projekt": {"titel": "Schleifen in Java", "untertitel": "POS · 1. Test"},
+  "neue_themen": [
+    {
+      "ref": "T1",
+      "titel": "Die for-Schleife",
+      "kurz": "Wiederholt Anweisungen, solange die Bedingung erfüllt ist.",
+      "quelle": "foto",
+      "bloecke": [
+        {"typ": "regel", "quelle": "foto", "foto": "001.jpg", "spick": true, "titel": "Aufbau",
+         "md": "`for (Start; Bedingung; Schritt) { … }` – der Schritt läuft nach jedem Durchlauf.",
+         "beispiele": ["`for (int i = 0; i < 3; i++)` läuft für i = 0, 1, 2"]},
+        {"typ": "code", "quelle": "foto", "foto": "001.jpg", "sprache": "java",
+         "code": "int summe = 0;\nfor (int i = 1; i <= 4; i++) {\n    summe += i;\n}\nSystem.out.println(summe);",
+         "erklaerungen": [
+           {"zeilen": "2", "md": "`i` startet bei 1 und läuft bis einschließlich 4."},
+           {"zeilen": "3", "md": "Addiert den aktuellen Wert von `i` zur Summe."},
+           {"zeilen": "5", "md": "Gibt `10` aus (1 + 2 + 3 + 4)."}
+         ]},
+        {"typ": "hinweis", "quelle": "ki", "art": "falle",
+         "md": "`i <= 4` statt `i < 4`: Ein falsches Vergleichszeichen ist der häufigste Grund für einen Durchlauf zu viel oder zu wenig."}
+      ]
+    }
+  ],
+  "neue_aufgaben": [
+    {"thema_ref": "T1", "art": "probe", "quelle": "ki", "titel": "Gerade Zahlen", "schwierigkeit": 1,
+     "angabe_md": "Gib alle geraden Zahlen von 2 bis 10 aus.", "rechenaufgabe": false,
+     "schritte": [
+       {"titel": "Schrittweite 2", "quelle": "ki",
+        "bloecke": [{"typ": "code", "quelle": "ki", "sprache": "java",
+                     "code": "for (int i = 2; i <= 10; i += 2) {\n    System.out.println(i);\n}"}]}
+     ],
+     "ergebnis": {"md": "```java\nfor (int i = 2; i <= 10; i += 2) {\n    System.out.println(i);\n}\n```"}}
+  ],
+  "neue_karten": [
+    {"thema_ref": "T1", "quelle": "ki", "vorne_md": "Wann wird der Schritt (`i++`) ausgeführt?", "hinten_md": "Nach jedem Schleifendurchlauf, vor der nächsten Prüfung der Bedingung."}
+  ],
+  "neue_fragen": [
+    {"thema_ref": "T1", "quelle": "ki", "art": "mc",
+     "frage_md": "Was gibt dieses Programm aus?\n\n```java\nfor (int i = 0; i < 3; i++) {\n    System.out.print(i);\n}\n```",
+     "optionen": ["`123`", "`0123`", "`012`", "`12`"], "richtig": 2,
+     "erklaerung_md": "`i` läuft von 0 bis 2, weil die Bedingung `i < 3` bei 3 abbricht. `0123` würde `i <= 3` brauchen."},
+    {"thema_ref": "T1", "quelle": "ki", "art": "wahrfalsch",
+     "frage_md": "Eine for-Schleife wird immer mindestens einmal durchlaufen.", "optionen": [], "wahr": false,
+     "erklaerung_md": "Falsch: Ist die Bedingung schon am Anfang falsch, läuft sie gar nicht. Mindestens einmal läuft nur `do … while`."}
+  ]
+}

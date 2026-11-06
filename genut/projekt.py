@@ -89,7 +89,7 @@ class Projekt:
         return [cls(d) for d in sorted(basis.iterdir()) if (d / "projekt.json").exists()]
 
     def meta(self) -> ProjektMeta:
-        return ProjektMeta.model_validate_json((self.ordner / "projekt.json").read_text())
+        return ProjektMeta.model_validate_json((self.ordner / "projekt.json").read_text(encoding="utf-8"))
 
     def meta_speichern(self, m: ProjektMeta) -> None:
         atomar_schreiben(self.ordner / "projekt.json", m.model_dump_json(indent=2))
@@ -107,7 +107,7 @@ class Projekt:
         if not self.inhalt_pfad.exists():
             m = self.meta()
             return Dokument(projekt=ProjektKopf(titel=m.name, fach=m.fach))
-        return Dokument.model_validate_json(self.inhalt_pfad.read_text())
+        return Dokument.model_validate_json(self.inhalt_pfad.read_text(encoding="utf-8"))
 
     def inhalt_speichern(self, doc: Dokument) -> None:
         if self.inhalt_pfad.exists():
@@ -125,7 +125,7 @@ class Projekt:
 
     def transkript(self, datei: str) -> str:
         p = self.transkript_pfad(datei)
-        return p.read_text() if p.exists() else ""
+        return p.read_text(encoding="utf-8") if p.exists() else ""
 
     def transkript_speichern(self, datei: str, md: str) -> None:
         atomar_schreiben(self.transkript_pfad(datei), md)
@@ -133,4 +133,4 @@ class Projekt:
     def log(self, schritt: str, daten: dict) -> None:
         self.logs.mkdir(exist_ok=True)
         (self.logs / f"{datetime.now():%Y%m%d-%H%M%S-%f}-{schritt}.json").write_text(
-            json.dumps(daten, ensure_ascii=False, indent=2))
+            json.dumps(daten, ensure_ascii=False, indent=2), encoding="utf-8")

@@ -162,13 +162,13 @@ def diagramm_speichern(slug: str, h: str, daten: DiagrammSvg):
     ordner = p.ordner / "diagramme"
     ordner.mkdir(exist_ok=True)
     if daten.fehler:
-        (ordner / f"{h}.fehler").write_text(daten.fehler[:2000])
+        (ordner / f"{h}.fehler").write_text(daten.fehler[:2000], encoding="utf-8")
         return {"ok": True}
     if not daten.hell:
         raise HTTPException(400, "hell fehlt")
-    (ordner / f"{h}-hell.svg").write_text(svg_bereinigen(daten.hell))
+    (ordner / f"{h}-hell.svg").write_text(svg_bereinigen(daten.hell), encoding="utf-8")
     if daten.dunkel:
-        (ordner / f"{h}-dunkel.svg").write_text(svg_bereinigen(daten.dunkel))
+        (ordner / f"{h}-dunkel.svg").write_text(svg_bereinigen(daten.dunkel), encoding="utf-8")
     return {"ok": True}
 
 
@@ -508,7 +508,7 @@ def seite(slug: str):
     p = projekt(slug)
     if not p.ausgabe.exists():
         return HTMLResponse("<p style='font:16px system-ui;padding:20px'>Noch keine Seite gebaut.</p>")
-    return HTMLResponse(p.ausgabe.read_text(), headers={"Cache-Control": "no-store"})
+    return HTMLResponse(p.ausgabe.read_text(encoding="utf-8"), headers={"Cache-Control": "no-store"})
 
 
 @app.get("/api/projekte/{slug}/download")
@@ -582,11 +582,11 @@ def ki_setzen(daten: StandardModell):
     if daten.standard not in ("claude_code", "gemini", "ollama"):
         raise HTTPException(400, f"unbekanntes Modell {daten.standard!r}")
     pfad = config_pfad()
-    text = pfad.read_text() if pfad.exists() else ""
+    text = pfad.read_text(encoding="utf-8") if pfad.exists() else ""
     neu, n = re.subn(r'(?ms)(^\[modell\][^\[]*?^standard\s*=\s*)"[^"]*"', rf'\g<1>"{daten.standard}"', text, count=1)
     if not n:
         neu = text.rstrip() + f'\n\n[modell]\nstandard = "{daten.standard}"\n'
-    pfad.write_text(neu)
+    pfad.write_text(neu, encoding="utf-8")
     laden.cache_clear()
     return ki_status()
 

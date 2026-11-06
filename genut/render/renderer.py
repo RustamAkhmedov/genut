@@ -190,7 +190,7 @@ def _sqljs() -> str:
     js, wasm = d / "sql-wasm.js", d / "sql-wasm.wasm"
     if not js.exists() or not wasm.exists():
         return ""
-    return (js.read_text().replace("</script", "<\\/script") +
+    return (js.read_text(encoding="utf-8").replace("</script", "<\\/script") +
             f"\nwindow.GENUT_SQL_WASM='{base64.b64encode(wasm.read_bytes()).decode()}';")
 
 
@@ -206,9 +206,9 @@ def html_bauen(doc: Dokument, fotos: Path | None, slug: str, diagramme: Path | N
             for art in ("hell", "dunkel"):
                 f = diagramme / f"{h}-{art}.svg"
                 if f.exists():
-                    out[art] = Markup(_svg_mindestbreite(f.read_text()))
+                    out[art] = Markup(_svg_mindestbreite(f.read_text(encoding="utf-8")))
             if (diagramme / f"{h}.fehler").exists():
-                out["fehler"] = (diagramme / f"{h}.fehler").read_text()
+                out["fehler"] = (diagramme / f"{h}.fehler").read_text(encoding="utf-8")
         return out
 
     def bild(b):
@@ -242,20 +242,20 @@ def html_bauen(doc: Dokument, fotos: Path | None, slug: str, diagramme: Path | N
         doc=doc, p=doc.projekt, themen=doc.themen, thema=themen, aufgaben=doc.aufgaben, karten=doc.karten,
         spick=spick, graphen=graphen, bild=bild, daten_json=Markup(daten_json), quiz=quiz, vokabeln=vokabeln,
         fach=fach, diagramm=diagramm, sqljs=Markup(_sqljs()) if hat_sql else "",
-        css=Markup((ASSETS / "seite.css").read_text()), font_css=Markup(_font_css()),
-        js=Markup((ASSETS / "seite.js").read_text()),
+        css=Markup((ASSETS / "seite.css").read_text(encoding="utf-8")), font_css=Markup(_font_css()),
+        js=Markup((ASSETS / "seite.js").read_text(encoding="utf-8")),
     )
 
 
 def rendern(doc: Dokument, fotos: Path | None, slug: str, ziel: Path, diagramme: Path | None = None) -> dict:
     roh = html_bauen(doc, fotos, slug, diagramme)
     ziel.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False, dir=ziel.parent) as f:
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".html", delete=False, dir=ziel.parent) as f:
         f.write(roh)
         tmp = Path(f.name)
     try:
         r = subprocess.run([node_befehl(), str(WURZEL / "node" / "prerender.js"), str(tmp), str(ziel)],
-                           capture_output=True, text=True, cwd=WURZEL, timeout=300)
+                           capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=WURZEL, timeout=300)
     finally:
         tmp.unlink(missing_ok=True)
     if r.returncode != 0:

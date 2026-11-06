@@ -31,9 +31,9 @@ def test_veroeffentlichen(projekt_mit_inhalt, pages_repo):
     url = export.veroeffentlichen(p, klon, "https://beispiel.github.io/lernseiten/")
     assert url == f"https://beispiel.github.io/lernseiten/{p.slug}/"
     assert (klon / p.slug / "index.html").exists()
-    seiten = json.loads((klon / "seiten.json").read_text())
+    seiten = json.loads((klon / "seiten.json").read_text(encoding="utf-8"))
     assert seiten[0]["slug"] == p.slug
-    assert p.slug in (klon / "index.html").read_text()
+    assert p.slug in (klon / "index.html").read_text(encoding="utf-8")
     assert "Lernseite" in _git(bare, "log", "--oneline", "main")
     assert p.meta().pages.veroeffentlicht
 
@@ -49,7 +49,7 @@ def test_unsauberer_baum_bricht_ab(projekt_mit_inhalt, pages_repo):
 def _config(monkeypatch, tmp_path, text):
     from genut.config import laden
     cfg = tmp_path / "config.toml"
-    cfg.write_text(text)
+    cfg.write_text(text, encoding="utf-8")
     monkeypatch.setenv("GENUT_CONFIG", str(cfg))
     laden.cache_clear()
 
@@ -73,7 +73,7 @@ def test_pages_in_oeffentlichen_versionen_aus(projekt_mit_inhalt, monkeypatch, t
     from genut.server import app
 
     for version in ("claude", "gemini", "lokal"):
-        _config(monkeypatch, tmp_path, (Path(__file__).parent.parent / "versionen" / f"{version}.toml").read_text())
+        _config(monkeypatch, tmp_path, (Path(__file__).parent.parent / "versionen" / f"{version}.toml").read_text(encoding="utf-8"))
         try:
             c = TestClient(app)
             assert c.get(f"/api/projekte/{projekt_mit_inhalt.slug}/pages").status_code == 404

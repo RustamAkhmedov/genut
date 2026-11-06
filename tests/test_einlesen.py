@@ -171,6 +171,8 @@ def test_ergaenzen_und_themenauswahl_im_prompt(projekte):
     meta = p.meta()
     meta.fotos[0].status = "kontrolliert"
     meta.fotos[0].ausgeschlossen = ["Interferenz"]
+    meta.einstellungen.probeaufgaben_pro_thema = meta.einstellungen.quiz_pro_thema = 0   # kein Nachfordern
+    meta.einstellungen.karten = 0
     p.meta_speichern(meta)
     patch = {"projekt": {"titel": "Wellen"}, "neue_themen": [{"ref": "T1", "titel": "Wellen", "quelle": "foto",
                                                                "bloecke": [{"typ": "text", "quelle": "foto", "md": "Frequenz"}]}]}

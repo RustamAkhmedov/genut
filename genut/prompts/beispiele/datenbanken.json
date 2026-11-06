@@ -1,0 +1,48 @@
+{
+  "projekt": {"titel": "Gruppieren in SQL", "untertitel": "DBI · 2. Test"},
+  "neue_themen": [
+    {
+      "ref": "T1",
+      "titel": "GROUP BY und Aggregatfunktionen",
+      "kurz": "Zeilen mit gleichem Wert zusammenfassen und je Gruppe rechnen.",
+      "quelle": "foto",
+      "bloecke": [
+        {"typ": "definition", "quelle": "foto", "foto": "001.jpg", "spick": true, "begriff": "GROUP BY",
+         "md": "Fasst alle Zeilen mit gleichem Wert in den angegebenen Spalten zu einer Gruppe zusammen. Im `SELECT` stehen dann nur Gruppenspalten und Aggregatfunktionen wie `COUNT`, `SUM`, `AVG`."},
+        {"typ": "sql", "quelle": "ki", "titel": "Schüler pro Klasse",
+         "schema_sql": "CREATE TABLE schueler (id INTEGER PRIMARY KEY, name TEXT, klasse TEXT);\nINSERT INTO schueler VALUES (1, 'Huber', '4AHIF'), (2, 'Maier', '4AHIF'), (3, 'Gruber', '4BHIF'), (4, 'Wagner', '4AHIF'), (5, 'Berger', '4BHIF');",
+         "abfrage": "SELECT klasse, COUNT(*) AS anzahl\nFROM schueler\nGROUP BY klasse;",
+         "erklaerung_md": "Für jede Klasse entsteht genau eine Ergebniszeile."},
+        {"typ": "hinweis", "quelle": "ki", "art": "falle",
+         "md": "Bedingungen auf Gruppen gehören in `HAVING`, nicht in `WHERE`: `WHERE` filtert Zeilen *vor* dem Gruppieren."}
+      ]
+    }
+  ],
+  "neue_aufgaben": [
+    {"thema_ref": "T1", "art": "probe", "quelle": "ki", "titel": "Große Klassen", "schwierigkeit": 2,
+     "angabe_md": "Gib alle Klassen mit mehr als 2 Schülern aus (Tabelle `schueler` wie oben).", "rechenaufgabe": true,
+     "schritte": [
+       {"titel": "Gruppieren und filtern", "quelle": "ki",
+        "bloecke": [{"typ": "sql", "quelle": "ki",
+                     "schema_sql": "CREATE TABLE schueler (id INTEGER PRIMARY KEY, name TEXT, klasse TEXT);\nINSERT INTO schueler VALUES (1, 'Huber', '4AHIF'), (2, 'Maier', '4AHIF'), (3, 'Gruber', '4BHIF'), (4, 'Wagner', '4AHIF'), (5, 'Berger', '4BHIF');",
+                     "abfrage": "SELECT klasse\nFROM schueler\nGROUP BY klasse\nHAVING COUNT(*) > 2;"}]}
+     ],
+     "ergebnis": {"md": "Nur `4AHIF` (3 Schüler).",
+                  "check": {"art": "sql",
+                            "schema_sql": "CREATE TABLE schueler (id INTEGER PRIMARY KEY, name TEXT, klasse TEXT);\nINSERT INTO schueler VALUES (1, 'Huber', '4AHIF'), (2, 'Maier', '4AHIF'), (3, 'Gruber', '4BHIF'), (4, 'Wagner', '4AHIF'), (5, 'Berger', '4BHIF');",
+                            "abfrage": "SELECT klasse FROM schueler GROUP BY klasse HAVING COUNT(*) > 2;",
+                            "erwartet": [["4AHIF"]], "reihenfolge": false}}}
+  ],
+  "neue_karten": [
+    {"thema_ref": "T1", "quelle": "ki", "vorne_md": "`WHERE` oder `HAVING` für `COUNT(*) > 2`?", "hinten_md": "`HAVING` – die Bedingung betrifft die Gruppe, nicht einzelne Zeilen."}
+  ],
+  "neue_fragen": [
+    {"thema_ref": "T1", "quelle": "ki", "art": "mc", "frage_md": "Welche Funktion zählt die Zeilen einer Gruppe?",
+     "optionen": ["`SUM(*)`", "`COUNT(*)`", "`MAX(*)`", "`TOTAL()`"], "richtig": 1,
+     "erklaerung_md": "`COUNT(*)` zählt Zeilen. `SUM` addiert Werte einer Spalte, `MAX(*)` gibt es nicht."},
+    {"thema_ref": "T1", "quelle": "ki", "art": "wahrfalsch",
+     "frage_md": "Nach `GROUP BY klasse` darf im `SELECT` jede beliebige Spalte ohne Aggregatfunktion stehen.",
+     "optionen": [], "wahr": false,
+     "erklaerung_md": "Falsch: Nur Gruppenspalten oder Aggregatfunktionen sind eindeutig. SQLite erlaubt es zwar, liefert dann aber einen beliebigen Wert aus der Gruppe."}
+  ]
+}

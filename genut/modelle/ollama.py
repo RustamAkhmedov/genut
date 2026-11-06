@@ -12,6 +12,7 @@ TIMEOUT = 1800
 
 class Ollama:
     name = "ollama"
+    beispiele = True   # kleines Modell: Beispiel-Patch im Prompt hilft beim Format
 
     def __init__(self, cfg: dict):
         self.url = (cfg.get("url") or "http://localhost:11434").rstrip("/") + "/api/chat"

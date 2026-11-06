@@ -94,4 +94,4 @@ def test_projekt_speichern_mit_verlauf(projekt_mit_inhalt):
     doc.projekt.titel = "x"
     p.inhalt_speichern(doc)
     assert len(list((p.ordner / "verlauf").glob("inhalt.*.json"))) == 1
-    assert json.loads(p.inhalt_pfad.read_text())["projekt"]["titel"] == "x"
+    assert json.loads(p.inhalt_pfad.read_text(encoding="utf-8"))["projekt"]["titel"] == "x"

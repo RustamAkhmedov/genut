@@ -44,7 +44,7 @@ class ClaudeCode:
             cmd += ["--model", self.modell]
         cwd = bilder[0].resolve().parent if bilder else None
         try:
-            r = subprocess.run(cmd, capture_output=True, text=True, timeout=TIMEOUT, cwd=cwd)
+            r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=TIMEOUT, cwd=cwd)
         except FileNotFoundError as e:
             raise ModellFehler(f"Claude-Code-CLI nicht gefunden ({self.befehl})") from e
         except subprocess.TimeoutExpired as e:

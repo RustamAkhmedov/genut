@@ -100,3 +100,30 @@ def test_dollar_und_bbox(doc):
 def test_check_modell():
     c = CheckGleich(art="gleich", ausdruck="1", erwartet="1")
     assert c.art == "gleich"
+
+
+def test_abgestuerzter_arbeiter_bricht_nichts_ab(monkeypatch):
+    """Stirbt der Arbeiterprozess mitten im Auftrag, gibt es Absturz (= nicht prüfbar) statt ConnectionResetError."""
+    import multiprocessing as mp
+    import os
+
+    from genut.pruefer.sandbox import Absturz, Arbeiter
+    a = Arbeiter()
+
+    def sterbender_start():
+        ktx = mp.get_context("spawn")
+        a._ltg, kind = ktx.Pipe()
+        a._proz = ktx.Process(target=os._exit, args=(3,), daemon=True)   # antwortet nie, Verbindung reißt ab
+        a._proz.start()
+        kind.close()
+
+    monkeypatch.setattr(a, "_starten", sterbender_start)
+    with pytest.raises(Absturz):
+        a.ausfuehren("check_gleich", "1", "1", timeout=5)
+    assert issubclass(Absturz, Zeitueberschreitung)
+    from genut.pruefer import _check
+    from genut.pruefer import sandbox
+    monkeypatch.setattr(sandbox, "ARBEITER", a)
+    import genut.pruefer as pr
+    monkeypatch.setattr(pr, "ARBEITER", a)
+    assert _check(CheckGleich(art="gleich", ausdruck="1", erwartet="1"))[0] is None   # nicht prüfbar, kein Absturz

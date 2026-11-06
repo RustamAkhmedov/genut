@@ -287,6 +287,10 @@ titel "Startbefehl"
   echo '#!/usr/bin/env bash'
   echo '# gen_Ut starten (angelegt von setup.sh). Beenden mit Strg+C.'
   echo 'cd "$(dirname "$0")"'
+  if [ "$NODE_BIN" != "$WURZEL/.werkzeuge/node/bin" ]; then
+    # beim Setup gefundenes Node.js (z. B. Homebrew) – per Doppelklick im Finder ist der PATH nicht immer derselbe
+    echo "export PATH=\"$NODE_BIN:\$PATH\""
+  fi
   if [ "$VERSION" = lokal ]; then
     echo 'if command -v ollama >/dev/null 2>&1 && ! ollama list >/dev/null 2>&1; then (nohup ollama serve >/dev/null 2>&1 &); sleep 3; fi'
   fi

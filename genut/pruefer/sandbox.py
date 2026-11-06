@@ -84,6 +84,11 @@ class Zeitueberschreitung(Exception):
     pass
 
 
+class Absturz(Zeitueberschreitung):
+    """Der Arbeiterprozess ist mitten im Auftrag gestorben (z. B. Speicher, Absturz in einer Bibliothek). Erbt von
+    Zeitueberschreitung, damit jeder Aufrufer ihn schon als „nicht prüfbar“ behandelt, statt abzustürzen."""
+
+
 class Arbeiter:
     """Ein dauerhafter SymPy-Prozess; bei Zeitüberschreitung wird er ersetzt."""
 
@@ -106,19 +111,27 @@ class Arbeiter:
 
     def ausfuehren(self, name: str, *args, timeout: float = 10.0):
         with self._sperre:
-            if self._proz is None or not self._proz.is_alive():
-                self._starten()
-            self._ltg.send((name, args))
-            # Der erste Auftrag zahlt den SymPy-Import mit, daher großzügiger.
-            if not self._ltg.poll(timeout + (15 if not getattr(self, "_warm", False) else 0)):
-                self._beenden()
-                self._warm = False
-                raise Zeitueberschreitung(name)
-            self._warm = True
-            status, wert = self._ltg.recv()
-            if status == "fehler":
-                raise RuntimeError(wert)
-            return wert
+            for versuch in (1, 2):
+                if self._proz is None or not self._proz.is_alive():
+                    self._starten()
+                try:
+                    self._ltg.send((name, args))
+                    # Der erste Auftrag zahlt den SymPy-Import mit, daher großzügiger.
+                    if not self._ltg.poll(timeout + (15 if not getattr(self, "_warm", False) else 0)):
+                        self._beenden()
+                        self._warm = False
+                        raise Zeitueberschreitung(name)
+                    status, wert = self._ltg.recv()
+                except (EOFError, OSError):   # Prozess gestorben (Verbindung zu/zurückgesetzt): neu starten
+                    self._beenden()
+                    self._warm = False
+                    if versuch == 2:
+                        raise Absturz(name) from None
+                    continue
+                self._warm = True
+                if status == "fehler":
+                    raise RuntimeError(wert)
+                return wert
 
 
 ARBEITER = Arbeiter()

@@ -35,7 +35,7 @@ dev = ["pytest>=8", "playwright>=1.44", "jsonschema>=4.20"]
 include = ["genut*"]
 
 [tool.setuptools.package-data]
-genut = ["prompts/*.md", "render/templates/**/*", "render/assets/**/*"]
+genut = ["prompts/**/*", "render/templates/**/*", "render/assets/**/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

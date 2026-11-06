@@ -26,7 +26,7 @@ Log = Callable[..., None]
 
 
 def prompt_laden(name: str, **werte) -> str:
-    text = (PAKET / "prompts" / f"{name}.md").read_text()
+    text = (PAKET / "prompts" / f"{name}.md").read_text(encoding="utf-8")
     for k, v in werte.items():
         text = text.replace("{{" + k + "}}", str(v))
     return text
@@ -35,7 +35,7 @@ def prompt_laden(name: str, **werte) -> str:
 def fach_werte(fach: str) -> dict[str, str]:
     """Platzhalter, die jeder Prompt bekommt: Fachname, Fach-Hinweis, Profil-Regeln."""
     f = faecher.fach(fach)
-    regeln = (PAKET / "prompts" / "profile" / f"{f.profil}.md").read_text()
+    regeln = (PAKET / "prompts" / "profile" / f"{f.profil}.md").read_text(encoding="utf-8")
     return {"fach": f.name, "fach_hinweis": f.hinweis, "profil_regeln": regeln,
             "profil_transkript": faecher.PROFILE[f.profil].transkript}
 
@@ -125,6 +125,72 @@ def _code_zaun_weg(text: str) -> str:
     return m.group(1) if m else text
 
 
+# Wie die KI die Position einer Skizze angibt. Gemini ist auf box_2d trainiert ([ymin, xmin, ymax, xmax], 0–1000),
+# alle anderen bekommen das eigene Format. Gespeichert wird immer bbox=x,y,b,h (relativ 0–1).
+SKIZZE_FORMAT = {
+    "relativ": (
+        '   `[[SKIZZE art=graph bbox=x,y,b,h beschreibung="…"]]`\n'
+        "   - `bbox` = Position im Foto, relativ (0–1), Ursprung oben links: x, y = linke obere Ecke, b, h = Breite, "
+        "Höhe. Großzügig umrahmen."),
+    "box_2d": (
+        '   `[[SKIZZE art=graph box_2d=ymin,xmin,ymax,xmax beschreibung="…"]]`\n'
+        "   - `box_2d` = Rahmen um die Skizze als ganze Zahlen von 0 bis 1000 (auf die Bildgröße bezogen), in genau "
+        "dieser Reihenfolge: ymin, xmin, ymax, xmax. Großzügig umrahmen."),
+}
+
+_ZAHL = r"\s*(-?\d+(?:\.\d+)?)"
+_BOX_2D = re.compile(r"box_2d=\[?" + r"\s*,".join([_ZAHL] * 4) + r"(?:\s*\])?")
+
+
+def box_2d_umrechnen(md: str) -> str:
+    """`box_2d=ymin,xmin,ymax,xmax` (0–1000) in SKIZZE-Zeilen → `bbox=x,y,b,h` (relativ 0–1)."""
+    def ersetzen(m: re.Match) -> str:
+        y1, x1, y2, x2 = (min(max(float(v) / 1000, 0.0), 1.0) for v in m.groups())
+        x1, x2 = sorted((x1, x2))
+        y1, y2 = sorted((y1, y2))
+        return "bbox=" + ",".join(f"{v:.3f}".rstrip("0").rstrip(".") or "0" for v in (x1, y1, x2 - x1, y2 - y1))
+    return "\n".join(_BOX_2D.sub(ersetzen, z) if "[[SKIZZE" in z else z for z in md.split("\n"))
+
+
+def mengen_fehlen(doc: Dokument, themen_ids: set[str], e) -> dict[str, list[str]]:
+    """Was je Thema im Vergleich zu den Einstellungen fehlt ({thema_id: ["2 Quizfragen", …]}, leer = alles da).
+    Karteikarten: „auto“ heißt mindestens 3; Vokabel-Blöcke zählen mit (aus ihnen werden automatisch Karten)."""
+    min_karten = 3 if e.karten == "auto" else int(e.karten)
+    fehlt: dict[str, list[str]] = {}
+    for t in doc.themen:
+        if t.id not in themen_ids:
+            continue
+        z = []
+        if not t.bloecke:
+            z.append("Inhaltsblöcke (Erklärungen, Definitionen, Regeln … aus den Transkripten)")
+        probe = sum(1 for a in doc.aufgaben if a.thema_id == t.id and a.art == "probe")
+        if probe < e.probeaufgaben_pro_thema:
+            z.append(f"{e.probeaufgaben_pro_thema - probe} Probeaufgabe(n)")
+        karten = (sum(1 for k in doc.karten if k.thema_id == t.id) +
+                  sum(1 for b in t.bloecke if b.typ == "vokabel"))
+        if karten < min_karten:
+            z.append(f"{min_karten - karten} Karteikarte(n)")
+        fragen = sum(1 for q in doc.quiz if q.thema_id == t.id)
+        if fragen < e.quiz_pro_thema:
+            z.append(f"{e.quiz_pro_thema - fragen} Quizfrage(n)")
+        if z:
+            fehlt[t.id] = z
+    return fehlt
+
+
+def beispiel_text(profil: str) -> str:
+    """Beispiel-Patch des Profils als Prompt-Abschnitt (nur für KIs mit `beispiele = True`)."""
+    pfad = PAKET / "prompts" / "beispiele" / f"{profil}.json"
+    if not pfad.exists():
+        return ""
+    js = json.dumps(json.loads(pfad.read_text(encoding="utf-8")), ensure_ascii=False, indent=1)
+    return ("## Beispiel (nur fürs Format)\n\n"
+            "So sieht ein kleiner, gültiger Patch für dieses Fach aus. Übernimm **keinen** Inhalt daraus: Themen, "
+            "Texte und Dateinamen kommen nur aus den Transkripten oben. Deine Antwort ist meist deutlich umfangreicher "
+            "als das Beispiel: so viele Themen, Blöcke und Aufgaben, wie die Transkripte hergeben, und Probeaufgaben, "
+            "Karten und Quizfragen in der eingestellten Zahl.\n\n```json\n" + js + "\n```")
+
+
 class Pipeline:
     def __init__(self, projekt: Projekt, log: Log | None = None, modell: Modell | None = None):
         self.p = projekt
@@ -134,6 +200,15 @@ class Pipeline:
     # ---------------------------------------------------------------- Hilfen
     def log(self, text: str, **extra):
         self._log("log", text=text, **extra)
+
+    def _modell_info(self) -> dict:
+        """Zusatz für Log-Dateien, z. B. welches Gemini-Modell wirklich geantwortet hat."""
+        info = getattr(self.modell, "info", None)
+        return {"modell_info": info()} if callable(info) else {}
+
+    def _modell_kurz(self) -> str:
+        m = self._modell_info().get("modell_info", {}).get("modell")
+        return f" ({m})" if m else ""
 
     @property
     def modell(self) -> Modell:
@@ -154,9 +229,9 @@ class Pipeline:
             antwort = self.modell.text(prompt, bilder)
         finally:
             dauer = round(time.time() - t, 1)
-        self.p.log(schritt, {"modell": self.modell.name, "prompt": prompt, "bilder": [b.name for b in bilder],
-                             "antwort": antwort, "dauer_s": dauer})
-        self.log(f"{schritt}: Antwort nach {dauer} s")
+        self.p.log(schritt, {"modell": self.modell.name, **self._modell_info(), "prompt": prompt,
+                             "bilder": [b.name for b in bilder], "antwort": antwort, "dauer_s": dauer})
+        self.log(f"{schritt}: Antwort nach {dauer} s{self._modell_kurz()}")
         return antwort
 
     def _ki_json(self, schritt: str, prompt: str, modell_cls: type[BaseModel], bilder: list[Path],
@@ -172,9 +247,9 @@ class Pipeline:
                 obj = modell_cls.model_validate(roh)
                 probleme = extra(obj) if extra else []
                 if not probleme:
-                    self.p.log(schritt, {"modell": self.modell.name, "versuch": versuch, "prompt": p,
-                                         "antwort": roh, "dauer_s": round(time.time() - t, 1)})
-                    self.log(f"{schritt}: Antwort nach {round(time.time() - t, 1)} s")
+                    self.p.log(schritt, {"modell": self.modell.name, **self._modell_info(), "versuch": versuch,
+                                         "prompt": p, "antwort": roh, "dauer_s": round(time.time() - t, 1)})
+                    self.log(f"{schritt}: Antwort nach {round(time.time() - t, 1)} s{self._modell_kurz()}")
                     return obj
                 fehler = "\n".join(probleme)
             except ValidationError as e:
@@ -182,10 +257,11 @@ class Pipeline:
             except ModellFehler as e:
                 fehler = str(e)
                 if "kein gültiges JSON" not in fehler:  # Verbindungs-/CLI-Fehler: nicht wiederholen
-                    self.p.log(schritt, {"modell": self.modell.name, "versuch": versuch, "prompt": p, "fehler": fehler})
+                    self.p.log(schritt, {"modell": self.modell.name, **self._modell_info(), "versuch": versuch,
+                                         "prompt": p, "fehler": fehler})
                     raise
-            self.p.log(schritt, {"modell": self.modell.name, "versuch": versuch, "prompt": p, "antwort": roh,
-                                 "fehler": fehler, "dauer_s": round(time.time() - t, 1)})
+            self.p.log(schritt, {"modell": self.modell.name, **self._modell_info(), "versuch": versuch, "prompt": p,
+                                 "antwort": roh, "fehler": fehler, "dauer_s": round(time.time() - t, 1)})
             self.log(f"{schritt}: Antwort ungültig ({fehler[:200]}) – neuer Versuch" if versuch == 1 else
                      f"{schritt}: Antwort wieder ungültig")
             p = (prompt + "\n\n## Deine letzte Antwort war ungültig\n\n" + fehler[:4000] +
@@ -200,8 +276,10 @@ class Pipeline:
         fertig = []
         for i, f in enumerate(ziel, 1):
             self._log("fortschritt", text=f"Transkribiere {f.datei} ({i}/{len(ziel)})", schritt=i, von=len(ziel))
-            prompt = prompt_laden("transkribieren", **fach_werte(meta.fach))
+            format_ = SKIZZE_FORMAT.get(getattr(self.modell, "bbox_format", "relativ"), SKIZZE_FORMAT["relativ"])
+            prompt = prompt_laden("transkribieren", **fach_werte(meta.fach), skizze_format=format_)
             md = _code_zaun_weg(self._ki_text("transkribieren", prompt, [self.p.fotos / f.datei]))
+            md = box_2d_umrechnen(md)
             self.p.transkript_speichern(f.datei, md)
             self.foto_status(f.datei, "transkribiert")
             fertig.append(f.datei)
@@ -234,7 +312,8 @@ class Pipeline:
         teile, mit_graph = [], []
         for f in eintraege:
             md = abschnitte_filtern(self.p.transkript(f.datei), f.ausgeschlossen)
-            teile.append(f"<!-- foto: {f.datei} -->\n{md}")
+            md = re.sub(r"</\s*transkript\s*>", "&lt;/transkript&gt;", md, flags=re.I)  # Tag nicht vorzeitig schließen
+            teile.append(f'<transkript datei="{f.datei}">\n{md}\n</transkript>')
             if f.art == "foto" and "art=graph" in md:
                 mit_graph.append(self.p.fotos / f.datei)
         return "\n\n".join(teile), mit_graph
@@ -263,27 +342,84 @@ class Pipeline:
                   "was im Bestand schon vorkommt. Gibt es dazu nichts in den Transkripten, ergänze es sinnvoll mit `quelle: \"ki\"`.")
         return self._anreichern(quellen, zusatz, "Ergänzen")
 
+    def _anreichern_prompt(self, doc: Dokument, transkripte: str, zusatz: str) -> str:
+        meta = self.p.meta()
+        e = meta.einstellungen
+        return prompt_laden(
+            "anreichern", **fach_werte(meta.fach), transkripte=transkripte,
+            bestand=self._bestand(doc), probeaufgaben_pro_thema=e.probeaufgaben_pro_thema,
+            quiz_pro_thema=e.quiz_pro_thema, zusatz=zusatz,
+            beispiel=beispiel_text(faecher.profil_von(meta.fach)) if getattr(self.modell, "beispiele", False) else "",
+            karten="auto" if e.karten == "auto" else f"{e.karten} je Thema", erklaerstil=e.erklaerstil)
+
     def _anreichern(self, eintraege, zusatz: str, titel: str) -> dict:
         meta = self.p.meta()
         doc = self.p.inhalt()
         transkripte, mit_graph = self._transkripte(eintraege)
         e = meta.einstellungen
-        prompt = prompt_laden(
-            "anreichern", **fach_werte(meta.fach), transkripte=transkripte,
-            bestand=self._bestand(doc), probeaufgaben_pro_thema=e.probeaufgaben_pro_thema,
-            quiz_pro_thema=e.quiz_pro_thema, zusatz=zusatz,
-            karten="auto" if e.karten == "auto" else f"{e.karten} je Thema", erklaerstil=e.erklaerstil)
         self._log("fortschritt", text=titel, schritt=1, von=3)
-        patch = self._ki_json("anreichern", prompt, Patch, mit_graph, extra=lambda pt: patch_fehler(doc, pt))
+        patch = self._ki_json("anreichern", self._anreichern_prompt(doc, transkripte, zusatz), Patch, mit_graph,
+                              extra=lambda pt: patch_fehler(doc, pt))
+        vorher = {t.id for t in doc.themen}
         neu_ids = patch_anwenden(doc, patch)
         self.log(f"{len(neu_ids)} neue Elemente eingefügt")
         self.p.inhalt_speichern(doc)
+        neue_themen = {t.id for t in doc.themen} - vorher
+        fehlt = mengen_fehlen(doc, neue_themen, e)
+        if fehlt:
+            neu_ids |= self._nachfordern(doc, fehlt, transkripte, mit_graph)
+            self.p.inhalt_speichern(doc)
         self._log("fortschritt", text="Prüfen und korrigieren", schritt=2, von=3)
         zusammenfassung = self.pruefen_korrigieren(doc, neu_ids, e.max_korrekturrunden)
         self._log("fortschritt", text="Seite bauen", schritt=3, von=3)
         self.bauen(doc)
         zusammenfassung["neu"] = len(neu_ids)
+        zusammenfassung["nachgefordert"] = bool(fehlt)
+        zusammenfassung["fehlt"] = mengen_fehlen(doc, neue_themen, e)
         return zusammenfassung
+
+    def _nachfordern(self, doc: Dokument, fehlt: dict[str, list[str]], transkripte: str,
+                     mit_graph: list[Path]) -> set[str]:
+        """Genau eine gezielte Nachforderung für Themen, denen Inhalte fehlen. Scheitert sie, bleibt die Seite,
+        wie sie ist (die erste Antwort ist schon gespeichert). Gibt die IDs der neuen Elemente zurück."""
+        themen = {t.id: t for t in doc.themen}
+        text = "; ".join(f"{themen[tid].titel}: {', '.join(z)}" for tid, z in fehlt.items())
+        self.log(f"Es fehlen noch Inhalte, fordere einmal nach ({text[:300]})")
+        self._log("fortschritt", text="Fehlende Inhalte nachfordern", schritt=1, von=3)
+        zeilen = []
+        for tid, z in fehlt.items():
+            zeilen.append(f"- Thema `{tid}` ({themen[tid].titel}): es fehlen {', '.join(z)}")
+            vorhanden = [q.frage_md for q in doc.quiz if q.thema_id == tid] + \
+                        [k.vorne_md for k in doc.karten if k.thema_id == tid]
+            if vorhanden:
+                zeilen.append("  - schon vorhanden (nicht wiederholen): " +
+                              " | ".join(re.sub(r"\s+", " ", v)[:80] for v in vorhanden))
+        zusatz = ("## Auftrag: Fehlende Inhalte nachliefern\n\nDie Seite wurde gerade aus den Transkripten erzeugt "
+                  "(siehe Bestand). Im Vergleich zu den Einstellungen fehlt noch Folgendes:\n\n" + "\n".join(zeilen) +
+                  "\n\nLiefere **genau diese** fehlenden Elemente zu den genannten Themen: Probeaufgaben "
+                  "(`neue_aufgaben` mit `art: \"probe\"`), `neue_karten` und `neue_fragen` jeweils mit `thema_ref` = "
+                  "die Themen-`id` von oben, fehlende Inhaltsblöcke über `neue_bloecke` mit `thema_id`. Lege **keine** "
+                  "neuen Themen an und wiederhole nichts, was schon vorhanden ist.")
+        try:
+            patch = self._ki_json("nachfordern", self._anreichern_prompt(doc, transkripte, zusatz), Patch, mit_graph,
+                                  extra=lambda pt: patch_fehler(doc, pt))
+        except ModellFehler as ex:
+            self.log(f"Nachfordern fehlgeschlagen, die Seite bleibt ohne die fehlenden Inhalte: {ex}")
+            return set()
+        if patch.neue_themen:   # nicht verlangt: neue Themen samt ihren Elementen verwerfen
+            refs = {t.ref for t in patch.neue_themen}
+            self.log(f"Nachfordern: {len(refs)} ungefragte neue Themen verworfen")
+            patch.neue_themen = []
+            patch.neue_aufgaben = [a for a in patch.neue_aufgaben if a.thema_ref not in refs]
+            patch.neue_karten = [k for k in patch.neue_karten if k.thema_ref not in refs]
+            patch.neue_fragen = [q for q in patch.neue_fragen if q.thema_ref not in refs]
+        patch.projekt = None
+        ids = patch_anwenden(doc, patch)
+        self.log(f"Nachfordern: {len(ids)} Elemente ergänzt")
+        rest = mengen_fehlen(doc, set(fehlt), self.p.meta().einstellungen)
+        if rest:
+            self.log("Es fehlt weiterhin: " + "; ".join(f"{themen[t].titel}: {', '.join(z)}" for t, z in rest.items()))
+        return ids
 
     def pruefen_korrigieren(self, doc: Dokument, ids: set[str], max_runden: int) -> dict:
         fotos = self.p.fotos

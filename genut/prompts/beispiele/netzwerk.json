@@ -1,0 +1,44 @@
+{
+  "projekt": {"titel": "IPv4-Subnetting", "untertitel": "NSCS · 4. Klasse"},
+  "neue_themen": [
+    {
+      "ref": "T1",
+      "titel": "Netz- und Broadcastadresse",
+      "kurz": "Aus Adresse und Präfix die Grenzen des Subnetzes bestimmen.",
+      "quelle": "foto",
+      "bloecke": [
+        {"typ": "regel", "quelle": "foto", "foto": "001.jpg", "spick": true, "titel": "Blockgröße",
+         "md": "Blockgröße = \\(2^{32 - \\text{Präfix}}\\). Die Netzadresse ist das größte Vielfache der Blockgröße, das nicht über der Adresse liegt.",
+         "beispiele": ["/26 → Blockgröße 64 → Netze bei .0, .64, .128, .192"]},
+        {"typ": "subnetzrechner", "quelle": "ki", "titel": "Selbst ausprobieren", "start": "192.168.10.77/26"},
+        {"typ": "befehl", "quelle": "foto", "foto": "001.jpg", "kontext": "Router(config-if)#",
+         "befehl": "ip address 192.168.10.65 255.255.255.192",
+         "erklaerung_md": "Gibt dem Interface die erste Host-Adresse im Netz 192.168.10.64/26."}
+      ]
+    }
+  ],
+  "neue_aufgaben": [
+    {"thema_ref": "T1", "art": "foto", "quelle": "foto", "foto": "001.jpg", "titel": "Aufgabe 3", "schwierigkeit": 2,
+     "angabe_md": "Bestimme Netzadresse, Broadcast und Anzahl der nutzbaren Hosts für `192.168.10.77/26`.",
+     "rechenaufgabe": true,
+     "schritte": [
+       {"titel": "Blockgröße", "quelle": "ki",
+        "bloecke": [{"typ": "text", "quelle": "ki", "md": "\\(2^{32-26} = 64\\). 77 liegt im Block 64–127."}]},
+       {"titel": "Grenzen ablesen", "quelle": "ki",
+        "bloecke": [{"typ": "text", "quelle": "ki", "md": "Netz `192.168.10.64`, Broadcast `192.168.10.127`, Hosts \\(64 - 2 = 62\\)."}]}
+     ],
+     "ergebnis": {"md": "Netz `192.168.10.64`, Broadcast `192.168.10.127`, 62 Hosts",
+                  "check": {"art": "subnetz", "netz": "192.168.10.77/26",
+                            "erwartet": {"netzadresse": "192.168.10.64", "broadcast": "192.168.10.127", "hosts": 62}}}}
+  ],
+  "neue_karten": [
+    {"thema_ref": "T1", "quelle": "ki", "vorne_md": "Subnetzmaske zu /26?", "hinten_md": "`255.255.255.192`"}
+  ],
+  "neue_fragen": [
+    {"thema_ref": "T1", "quelle": "ki", "art": "mc", "frage_md": "Wie viele nutzbare Hosts hat ein /27-Netz?",
+     "optionen": ["32", "30", "62", "16"], "richtig": 1,
+     "erklaerung_md": "\\(2^5 = 32\\) Adressen, minus Netz- und Broadcastadresse = 30. 62 gilt für /26."},
+    {"thema_ref": "T1", "quelle": "ki", "art": "wahrfalsch", "frage_md": "Die Broadcastadresse darf einem Host zugewiesen werden.",
+     "optionen": [], "wahr": false, "erklaerung_md": "Falsch: Sie adressiert alle Hosts im Netz und ist reserviert."}
+  ]
+}

@@ -18,7 +18,7 @@ def _render(args):
     from .schema import Dokument
 
     ordner = Path(args.ordner)
-    doc = Dokument.model_validate_json((ordner / "inhalt.json").read_text())
+    doc = Dokument.model_validate_json((ordner / "inhalt.json").read_text(encoding="utf-8"))
     ergebnis = pruefe(doc, set(elemente(doc)), ordner / "fotos")
     zaehl: dict[str, int] = {}
     for i, p in ergebnis.items():

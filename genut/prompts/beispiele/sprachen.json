@@ -1,0 +1,42 @@
+{
+  "projekt": {"titel": "Past Simple", "untertitel": "Englisch · Grammatik"},
+  "neue_themen": [
+    {
+      "ref": "T1",
+      "titel": "Past Simple – Bildung",
+      "kurz": "Abgeschlossene Handlungen in der Vergangenheit.",
+      "quelle": "foto",
+      "bloecke": [
+        {"typ": "regel", "quelle": "foto", "foto": "001.jpg", "spick": true, "titel": "Regelmäßige Verben",
+         "md": "Grundform + **-ed**. Verneinung und Frage mit **did** + Grundform.",
+         "beispiele": ["I played football yesterday.", "She didn't play.", "Did you play?"]},
+        {"typ": "vokabel", "quelle": "foto", "foto": "001.jpg", "wort": "to borrow", "uebersetzung": "ausborgen",
+         "beispiel": "I borrowed a book from the library."},
+        {"typ": "lueckentext", "quelle": "ki", "titel": "Übung",
+         "anweisung_md": "Setze das Verb im Past Simple ein.",
+         "text": "Last summer we [[visited]] (visit) London. My sister [[didn't like|did not like]] (not like) the rain, but I [[enjoyed]] (enjoy) every day."},
+        {"typ": "hinweis", "quelle": "ki", "art": "falle",
+         "md": "Nach *did* steht immer die Grundform. Falsch: *Did you played?* Richtig: **Did you play?**"}
+      ]
+    }
+  ],
+  "neue_aufgaben": [
+    {"thema_ref": "T1", "art": "foto", "quelle": "foto", "foto": "001.jpg", "titel": "Exercise 2", "schwierigkeit": 1,
+     "angabe_md": "Write the sentence in the negative: *Tom watched TV.*", "rechenaufgabe": false,
+     "schritte": [
+       {"titel": "Verneinung mit did not", "quelle": "ki",
+        "bloecke": [{"typ": "text", "quelle": "ki", "md": "*did not* (kurz *didn't*) + Grundform *watch*."}]}
+     ],
+     "ergebnis": {"md": "Tom didn't watch TV."}}
+  ],
+  "neue_karten": [
+    {"thema_ref": "T1", "quelle": "ki", "vorne_md": "Frage im Past Simple bilden?", "hinten_md": "**Did** + Subjekt + Grundform: *Did you see it?*"}
+  ],
+  "neue_fragen": [
+    {"thema_ref": "T1", "quelle": "ki", "art": "mc", "frage_md": "Which sentence is correct?",
+     "optionen": ["She didn't went home.", "She not went home.", "She didn't go home.", "She don't went home."], "richtig": 2,
+     "erklaerung_md": "Nach *didn't* folgt die Grundform *go*. Die anderen Sätze verwenden die Vergangenheitsform doppelt oder das falsche Hilfsverb."},
+    {"thema_ref": "T1", "quelle": "ki", "art": "wahrfalsch", "frage_md": "*Did they arrive?* is a correct question.",
+     "optionen": [], "wahr": true, "erklaerung_md": "Richtig: *did* + Grundform *arrive*."}
+  ]
+}

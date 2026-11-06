@@ -17,7 +17,7 @@ class ExportFehler(Exception):
 
 
 def _git(repo: Path, *args: str) -> str:
-    r = subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, timeout=120)
+    r = subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
     if r.returncode != 0:
         raise ExportFehler(f"git {' '.join(args)}: {(r.stderr or r.stdout).strip()[-600:]}")
     return r.stdout
@@ -61,7 +61,7 @@ def veroeffentlichen(p: Projekt, repo: Path | None = None, basis: str | None = N
 
     doc = p.inhalt()
     manifest_pfad = repo / "seiten.json"
-    seiten = json.loads(manifest_pfad.read_text()) if manifest_pfad.exists() else []
+    seiten = json.loads(manifest_pfad.read_text(encoding="utf-8")) if manifest_pfad.exists() else []
     seiten = [s for s in seiten if s.get("slug") != p.slug]
     jetzt = datetime.now().isoformat(timespec="seconds")
     seiten.append({"slug": p.slug, "titel": doc.projekt.titel, "untertitel": doc.projekt.untertitel,

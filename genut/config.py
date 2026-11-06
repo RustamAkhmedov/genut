@@ -26,7 +26,7 @@ def config_pfad() -> Path:
 @lru_cache
 def laden() -> dict:
     pfad = config_pfad()
-    daten = tomllib.loads(pfad.read_text()) if pfad.exists() else {}
+    daten = tomllib.loads(pfad.read_text(encoding="utf-8")) if pfad.exists() else {}
     cfg = {k: dict(v) for k, v in STANDARD.items()}
     for abschnitt, werte in daten.items():
         cfg.setdefault(abschnitt, {}).update(werte)

@@ -31,7 +31,7 @@ def schluessel() -> str | None:
         return key.strip()
     env = WURZEL / ".env"
     if env.exists():
-        for zeile in env.read_text().splitlines():
+        for zeile in env.read_text(encoding="utf-8").splitlines():
             m = re.match(r"\s*(?:export\s+)?(GEMINI_API_KEY|GOOGLE_API_KEY)\s*=\s*['\"]?([^'\"\s#]+)", zeile)
             if m:
                 return m.group(2)
@@ -42,8 +42,18 @@ def _version(name: str) -> tuple:
     return tuple(int(x) for x in re.findall(r"\d+", name.split("/")[-1])[:3])
 
 
+def _konfig(modell: str, basis: dict) -> dict:
+    """Ab Gemini 3 bleibt die Temperatur beim Standard 1.0: Google warnt, dass niedrigere Werte zu Schleifen und
+    schlechteren Antworten führen können (Gemini-3-Prompting-Guide). Nur ältere Modelle (2.x) bekommen 0.2;
+    Namen ohne Version (z. B. gemini-flash-latest) zeigen auf aktuelle Modelle und bleiben beim Standard."""
+    v = _version(modell)
+    return {**basis, "temperature": 0.2} if v and v[0] < 3 else basis
+
+
 class Gemini:
     name = "gemini"
+    bbox_format = "box_2d"   # Gemini ist auf [ymin, xmin, ymax, xmax] 0–1000 trainiert
+    beispiele = True         # Beispiel-Patch im Prompt (pipeline.beispiel_text)
 
     def __init__(self, cfg: dict):
         self.modell = (cfg.get("modell") or "").strip()
@@ -82,21 +92,28 @@ class Gemini:
     def _modell(self) -> str:
         return self._kandidaten()[getattr(self, "_nr", 0)]
 
+    def info(self) -> dict:
+        """Für die Logs: welches Modell zuletzt geantwortet hat und welche Modelle mit welchem HTTP-Fehler ausgefallen
+        sind. Ohne Netzwerkzugriff (nur bereits bekannte Werte)."""
+        liste = [self.modell] if self.modell else (getattr(self, "_liste", None) or [])
+        nr = getattr(self, "_nr", 0)
+        return {"modell": liste[nr] if nr < len(liste) else None, "fehler": dict(self.gruende)}
+
     def _aufruf(self, prompt: str, bilder: list[Path], schema: dict | None, schema_im_prompt: bool = False) -> str:
         teile: list[dict] = [{"text": bild_hinweis_einsetzen(prompt, anhang_hinweis(bilder))}]
         for b in bilder:
             mime = mimetypes.guess_type(b.name)[0] or "image/jpeg"
             teile.append({"inline_data": {"mime_type": mime, "data": b64(b)}})
-        konfig: dict = {"temperature": 0.2}
+        konfig: dict = {}
         if schema is not None:
             konfig["responseMimeType"] = "application/json"
             if not schema_im_prompt:
                 konfig["responseJsonSchema"] = schema
-        body = {"contents": [{"role": "user", "parts": teile}], "generationConfig": konfig}
         warten = 10.0
         ueberlastet = 0
         for versuch in range(VERSUCHE * 2):
             url = f"{self.basis}/models/{self._modell()}:generateContent"
+            body = {"contents": [{"role": "user", "parts": teile}], "generationConfig": _konfig(self._modell(), konfig)}
             try:
                 r = httpx.post(url, json=body, headers={"x-goog-api-key": self._key()}, timeout=TIMEOUT)
             except httpx.HTTPError as e:

@@ -307,7 +307,8 @@ Titel "Startbefehl"
 $start = @(
     '@echo off',
     'rem gen_Ut starten (angelegt von setup.ps1). Fenster offen lassen, beenden mit Strg+C.',
-    'cd /d "%~dp0"'
+    'cd /d "%~dp0"',
+    'set PYTHONUTF8=1'
 )
 if ($Version -eq "lokal") { $start += 'where ollama >nul 2>nul && (ollama list >nul 2>nul || start "" /min ollama serve)' }
 $start += @(

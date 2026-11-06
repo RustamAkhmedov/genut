@@ -47,8 +47,8 @@ def test_ollama_anfrage(monkeypatch):
 def test_claude_code_aufruf(monkeypatch):
     gesehen = {}
 
-    def run(cmd, capture_output, text, timeout, cwd):
-        gesehen["cmd"] = cmd
+    def run(cmd, capture_output, text, timeout, cwd, encoding=None, errors=None):
+        gesehen["cmd"], gesehen["encoding"] = cmd, encoding
         out = {"is_error": False, "result": '{"a":1}', "structured_output": {"a": 1}}
         return subprocess.CompletedProcess(cmd, 0, json.dumps(out), "")
 
@@ -58,6 +58,7 @@ def test_claude_code_aufruf(monkeypatch):
     cmd = gesehen["cmd"]
     assert cmd[cmd.index("--allowedTools") + 1] == "Read"
     assert "Bash" in cmd[cmd.index("--disallowedTools") + 1]
+    assert gesehen["encoding"] == "utf-8"          # Windows: Ausgabe der CLI ist UTF-8, nicht cp1252
     assert str(FOTO.resolve()) in cmd[2] and "--json-schema" in cmd
 
 
@@ -177,7 +178,7 @@ def test_ki_schalter_api(monkeypatch, tmp_path):
         assert c.get("/api/ki").json()["standard"] == "claude_code"
         r = c.put("/api/ki", json={"standard": "gemini"})
         assert r.status_code == 200 and r.json()["standard"] == "gemini"
-        text = cfg.read_text()
+        text = cfg.read_text(encoding="utf-8")
         assert 'standard = "gemini"   # Kommentar bleibt' in text and 'modell = "x"' in text
         assert c.put("/api/ki", json={"standard": "quatsch"}).status_code == 400
     finally:

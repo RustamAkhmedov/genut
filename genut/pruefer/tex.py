@@ -22,7 +22,7 @@ def pruefen(eintraege: list[dict]) -> dict[str, list[str]]:
     if not eintraege:
         return {}
     r = subprocess.run([node_befehl(), str(WURZEL / "node" / "tex_check.js")], input=json.dumps(eintraege),
-                       capture_output=True, text=True, cwd=WURZEL, timeout=120)
+                       capture_output=True, text=True, encoding="utf-8", errors="replace", cwd=WURZEL, timeout=120)
     if r.returncode != 0:
         raise RuntimeError(f"tex_check.js fehlgeschlagen: {r.stderr[-500:]}")
     fehler: dict[str, list[str]] = {}

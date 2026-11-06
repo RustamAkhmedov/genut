@@ -1,0 +1,45 @@
+{
+  "projekt": {"titel": "Bestimmtes Integral", "untertitel": "2. Schularbeit · 4. Klasse"},
+  "neue_themen": [
+    {
+      "ref": "T1",
+      "titel": "Fläche unter einer Kurve",
+      "kurz": "Das bestimmte Integral misst die Fläche zwischen Graph und x-Achse.",
+      "quelle": "foto",
+      "bloecke": [
+        {"typ": "definition", "quelle": "foto", "foto": "001.jpg", "spick": true,
+         "begriff": "Bestimmtes Integral",
+         "md": "\\(\\int_a^b f(x)\\,dx = F(b) - F(a)\\), wobei \\(F\\) eine Stammfunktion von \\(f\\) ist."},
+        {"typ": "formel", "quelle": "foto", "foto": "001.jpg", "spick": true,
+         "titel": "Potenzregel", "tex": "\\int x^n\\,dx = \\frac{x^{n+1}}{n+1}",
+         "variablen": [{"name": "n", "bedeutung": "Exponent, \\(n \\neq -1\\)"}],
+         "graph": {"x_min": -2, "x_max": 2, "funktionen": [{"ausdruck": "a*x**2", "label": "f(x) = a·x²"}],
+                   "parameter": [{"name": "a", "min": 0.5, "max": 3, "schritt": 0.5, "start": 1, "bedeutung": "Streckfaktor"}]}},
+        {"typ": "hinweis", "quelle": "ki", "art": "falle",
+         "md": "Liegt der Graph unter der x-Achse, ist das Integral negativ. Für die Fläche nimmst du den Betrag."}
+      ]
+    }
+  ],
+  "neue_aufgaben": [
+    {"thema_ref": "T1", "art": "foto", "quelle": "foto", "foto": "001.jpg", "titel": "Aufgabe 7.15 a)",
+     "schwierigkeit": 1, "angabe_md": "Berechne \\(\\int_0^3 x^2\\,dx\\).", "rechenaufgabe": true,
+     "schritte": [
+       {"titel": "Stammfunktion bilden", "quelle": "ki",
+        "bloecke": [{"typ": "text", "quelle": "ki", "md": "\\(F(x) = \\frac{x^3}{3}\\)"}]},
+       {"titel": "Grenzen einsetzen", "quelle": "ki",
+        "bloecke": [{"typ": "text", "quelle": "ki", "md": "\\(F(3) - F(0) = \\frac{27}{3} - 0 = 9\\)"}]}
+     ],
+     "ergebnis": {"md": "\\(9\\)", "check": {"art": "gleich", "ausdruck": "integrate(x**2, (x, 0, 3))", "erwartet": "9"}}}
+  ],
+  "neue_karten": [
+    {"thema_ref": "T1", "quelle": "ki", "vorne_md": "Stammfunktion von \\(x^2\\)?", "hinten_md": "\\(\\frac{x^3}{3}\\)"}
+  ],
+  "neue_fragen": [
+    {"thema_ref": "T1", "quelle": "ki", "art": "mc", "frage_md": "Wie groß ist \\(\\int_0^2 2x\\,dx\\)?",
+     "optionen": ["\\(2\\)", "\\(8\\)", "\\(4\\)", "\\(1\\)"], "richtig": 2,
+     "erklaerung_md": "Stammfunktion \\(x^2\\), also \\(2^2 - 0^2 = 4\\). \\(8\\) wäre das Rechteck \\(f(2) \\cdot 2\\) statt der Dreiecksfläche, \\(2\\) ist nur \\(f(1)\\).",
+     "check": {"art": "gleich", "ausdruck": "integrate(2*x, (x, 0, 2))", "erwartet": "4"}},
+    {"thema_ref": "T1", "quelle": "ki", "art": "wahrfalsch", "frage_md": "Ein bestimmtes Integral kann negativ sein.",
+     "optionen": [], "wahr": true, "erklaerung_md": "Ja, wenn der Graph im Intervall unter der x-Achse liegt."}
+  ]
+}

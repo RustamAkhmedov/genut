@@ -1,0 +1,43 @@
+{
+  "projekt": {"titel": "Stadtgeographie Wien", "untertitel": "Geographie · 3. Klasse"},
+  "neue_themen": [
+    {
+      "ref": "T1",
+      "titel": "Bevölkerung und Fläche",
+      "kurz": "Wie dicht Wien besiedelt ist und wie sich die Stadt entwickelt hat.",
+      "quelle": "foto",
+      "bloecke": [
+        {"typ": "definition", "quelle": "foto", "foto": "001.jpg", "spick": true, "begriff": "Bevölkerungsdichte",
+         "md": "Einwohner pro Quadratkilometer: Einwohnerzahl geteilt durch Fläche in km²."},
+        {"typ": "tabelle", "quelle": "foto", "foto": "001.jpg", "titel": "Wien und Graz im Vergleich",
+         "kopf": ["Stadt", "Einwohner", "Fläche"],
+         "zeilen": [["Wien", "ca. 2 000 000", "415 km²"], ["Graz", "ca. 300 000", "127 km²"]]},
+        {"typ": "zeitleiste", "quelle": "ki", "titel": "Entwicklung",
+         "eintraege": [
+           {"zeit": "1857", "titel": "Abriss der Stadtmauer beschlossen", "md": "Ab 1858 entsteht an ihrer Stelle die Ringstraße."},
+           {"zeit": "1910", "titel": "Über 2 Mio. Einwohner", "md": "Höchststand vor dem Ersten Weltkrieg."}
+         ]}
+      ]
+    }
+  ],
+  "neue_aufgaben": [
+    {"thema_ref": "T1", "art": "foto", "quelle": "foto", "foto": "001.jpg", "titel": "Aufgabe 4", "schwierigkeit": 1,
+     "angabe_md": "Berechne die Bevölkerungsdichte von Wien (2 000 000 Einwohner, 415 km²). Runde auf Ganze.",
+     "rechenaufgabe": true,
+     "schritte": [
+       {"titel": "Einwohner durch Fläche", "quelle": "ki",
+        "bloecke": [{"typ": "text", "quelle": "ki", "md": "\\(2\\,000\\,000 : 415 \\approx 4819\\) Einwohner pro km²"}]}
+     ],
+     "ergebnis": {"md": "ca. 4819 Einwohner/km²", "check": {"art": "numerisch", "ausdruck": "2000000/415", "erwartet": 4819, "toleranz": 0.5}}}
+  ],
+  "neue_karten": [
+    {"thema_ref": "T1", "quelle": "ki", "vorne_md": "Formel der Bevölkerungsdichte?", "hinten_md": "Einwohner : Fläche (km²)"}
+  ],
+  "neue_fragen": [
+    {"thema_ref": "T1", "quelle": "ki", "art": "mc", "frage_md": "Wozu wurde die Wiener Stadtmauer ab 1858 abgerissen?",
+     "optionen": ["Wegen eines Erdbebens", "Für den Bau der Ringstraße", "Für die erste U-Bahn", "Als Folge des Ersten Weltkriegs"], "richtig": 1,
+     "erklaerung_md": "Auf dem frei gewordenen Gelände entstand die Ringstraße. Die U-Bahn und der Erste Weltkrieg kamen viel später."},
+    {"thema_ref": "T1", "quelle": "ki", "art": "wahrfalsch", "frage_md": "Graz ist dichter besiedelt als Wien.",
+     "optionen": [], "wahr": false, "erklaerung_md": "Falsch: Graz hat etwa 2400 Einwohner/km², Wien etwa 4800."}
+  ]
+}
