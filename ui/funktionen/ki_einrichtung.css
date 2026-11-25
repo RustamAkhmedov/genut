@@ -1,0 +1,76 @@
+/* KI-Einrichtung (Feature 005b). Vom Modul ui/funktionen/ki_einrichtung.js selbst geladen.
+ * Nutzt nur die Tokens aus ui/app.css (hell/dunkel ergibt sich daraus). Präfix ki-.
+ * KLASSEN
+ *  Schalter: button.ki-bereit|.ki-fehlt|.ki-problem · .ki-symbol .ki-name .ki-exp
+ *  Hinweis:  .ki-hinweis .ki-hinweis-symbol
+ *  Dialog:   .ki-dlg .ki-dlg-box .ki-dlg-inhalt .ki-dlg-aktionen .ki-ursache .ki-liste
+ *  Einrichten: .ki-form .ki-eingabe .ki-fehler .ki-warnung .ki-befehl .ki-modelle .ki-modell(-kopf|-text) .ki-platz
+ *  Auftrag:    .ki-balken(.unbestimmt) .ki-prozent .ki-ausgabe
+ */
+.ki-schalter{max-width:100%}
+.ki-schalter button[data-ki]{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:34px;white-space:nowrap}
+.ki-schalter button.ki-fehlt{border:1px dashed var(--muted);color:var(--muted)}
+.ki-schalter button.ki-problem{background:var(--warn-soft);color:var(--ink);box-shadow:inset 0 0 0 1px var(--warn)}
+.ki-schalter button.ki-problem .ki-symbol{color:var(--warn)}
+/* Gewählt, aber nicht bereit: Rahmen statt Füllung */
+.ki-schalter button.ki-fehlt.an{background:var(--surface);color:var(--ink);border:2px dashed var(--accent)}
+.ki-schalter button.ki-problem.an{background:var(--warn-soft);color:var(--ink);box-shadow:inset 0 0 0 2px var(--accent)}
+.ki-symbol{font-weight:700;line-height:1}
+.ki-exp{font-size:.62rem;font-weight:700;line-height:1.3;padding:0 5px;border:1px solid currentColor;border-radius:99px}
+
+.ki-hinweis{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 20px;background:var(--warn-soft);border-bottom:1px solid var(--warn);color:var(--ink);font-size:.92rem}
+.ki-hinweis p{margin:0;flex:1 1 220px;min-width:0}
+.ki-hinweis-symbol{color:var(--warn);font-weight:700;font-size:1.1rem}
+.ki-hinweis .btn{min-height:40px}
+
+.ki-dlg-box{padding:20px;display:flex;flex-direction:column;gap:12px;min-width:0;overflow-wrap:anywhere}
+.ki-dlg-inhalt{display:flex;flex-direction:column;gap:10px;min-width:0}
+.ki-dlg-inhalt p{margin:0}
+.ki-dlg-inhalt > div{display:flex;flex-direction:column;gap:10px;min-width:0}
+.ki-dlg-inhalt > div > [hidden]{display:none}
+.ki-dlg-inhalt .ki-balken{margin:0;flex:none}
+.ki-dlg-inhalt .ki-ausgabe{flex:none}
+.ki-dlg-aktionen .btn{white-space:normal;text-align:center;max-width:100%}
+.ki-dlg-aktionen .btn[aria-disabled="true"]{opacity:.45;cursor:default}
+.ki-ursache{display:flex;gap:10px;padding:10px 12px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border)}
+.ki-ursache.ki-fehlt{border-style:dashed;border-color:var(--muted)}
+.ki-ursache.ki-problem{background:var(--warn-soft);border-color:var(--warn);color:var(--ink)}
+.ki-ursache.ki-bereit{background:var(--ok-soft);border-color:var(--ok);color:var(--ink)}
+.ki-liste{margin:0;padding-left:20px}
+
+.ki-form{display:flex;flex-direction:column;gap:10px;min-width:0}
+.ki-eingabe{width:100%;min-width:0;min-height:40px;font:inherit;font-weight:400;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.ki-eingabe[aria-invalid="true"]{border-color:var(--err)}
+.ki-fehler{padding:8px 12px;border-radius:8px;background:var(--err-soft);border-left:3px solid var(--err);color:var(--ink)}
+.ki-warnung{padding:8px 12px;border-radius:8px;background:var(--warn-soft);border-left:3px solid var(--warn);color:var(--ink);font-weight:600}
+.ki-befehl{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.ki-befehl code{flex:1 1 200px;min-width:0;padding:9px 12px;border:1px solid var(--border);border-radius:8px;user-select:all}
+.ki-befehl .btn{min-height:40px}
+
+.ki-modelle{display:flex;flex-direction:column;gap:6px;min-width:0;margin:0;padding:0;border:0}
+.ki-modelle legend{padding:0;margin-bottom:6px;font-weight:700;color:var(--ink)}
+.ki-modell{display:flex;gap:10px;align-items:flex-start;min-width:0;padding:9px 12px;border:1px solid var(--border);border-radius:10px;cursor:pointer}
+.ki-modell:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.ki-modell:has(input:focus-visible){outline:3px solid var(--accent);outline-offset:2px}
+.ki-modell input{flex:none;width:20px;height:20px;margin:1px 0 0;accent-color:var(--accent);cursor:pointer}
+.ki-modell-text{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ki-modell-kopf{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;color:var(--ink)}
+.ki-modell .chip.ok,.ki-modell .chip.warn,.ki-modell .chip.err{color:var(--ink)}
+.ki-modell .chip.ok{box-shadow:inset 0 0 0 1px var(--ok)}
+.ki-modell .chip.warn{box-shadow:inset 0 0 0 1px var(--warn)}
+.ki-modell .chip.err{box-shadow:inset 0 0 0 1px var(--err)}
+.ki-platz{color:var(--ink);background:var(--warn-soft);border-radius:6px;padding:3px 8px}
+
+.ki-balken{height:10px;border:1px solid var(--border)}
+.ki-balken.unbestimmt span{width:35%;animation:ki-laeuft 1.4s ease-in-out infinite alternate}
+@keyframes ki-laeuft{from{transform:translateX(0)}to{transform:translateX(186%)}}
+@media (prefers-reduced-motion:reduce){.ki-balken.unbestimmt span{animation:none;width:100%;opacity:.4}}
+.ki-ausgabe{max-height:160px}
+
+@media (max-width:640px){
+  .ki-schalter button[data-ki]{min-height:40px;gap:4px}
+  /* „experimentell“ unter den Namen, damit drei KIs in eine Zeile passen */
+  .ki-schalter button[data-ki="ollama"]{flex-wrap:wrap;column-gap:4px;row-gap:0;max-width:130px}
+  .ki-schalter .ki-exp{flex-basis:100%;border:0;padding:0;text-align:center}
+  .ki-hinweis{padding:10px 16px}
+}

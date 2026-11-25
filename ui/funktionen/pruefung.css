@@ -1,0 +1,94 @@
+/* Mündliche Prüfung (Feature 005). Vom Modul ui/funktionen/pruefung.js selbst geladen.
+ * Nutzt nur die Tokens aus ui/app.css (hell/dunkel ergibt sich daraus). Präfix pr-.
+ * KLASSEN
+ *  .pr .pr-start .pr-themen .pr-themenliste .pr-wahl .pr-fragen .pr-hinweis .pr-fehler
+ *  Chat:  .pr-chat .pr-kopf .pr-verlauf .pr-zeile(.pruefer|.schueler) .pr-blase .pr-wer .pr-text .pr-denkt
+ *         .pr-eingabe .pr-aktionen .pr-aktionen-zusatz (Platz für Mikrofon) .pr-zaehler
+ *  Ergebnis: .pr-ergebnis .pr-note-box(.note-1..5) .pr-note .pr-note-name .pr-punkte .pr-abschnitt
+ *         .pr-luecken .pr-luecke .pr-link .pr-rueck .pr-rueck-eintrag .pr-rueck-kopf .pr-label .pr-gespraech .pr-ende
+ */
+.pr{display:flex;flex-direction:column;gap:16px;min-width:0;max-width:760px}
+.pr *{min-width:0}
+.pr h2{font-family:var(--serif);color:var(--ink);font-size:1.25rem;margin:0}
+.pr p{margin:0}
+.pr .btn{white-space:normal;text-align:center}
+.pr a,.pr button,.pr input,.pr textarea,.pr summary{scroll-margin:80px}
+.pr :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+
+/* Start */
+.pr-start{display:flex;flex-direction:column;gap:12px}
+.pr-start form{display:flex;flex-direction:column;gap:14px}
+.pr-themen{border:0;padding:0;margin:0;display:flex;flex-direction:column;gap:8px;min-width:0}
+.pr-themen legend{padding:0;margin-bottom:6px}
+.pr-themenliste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;max-height:min(50vh,420px);overflow-y:auto;border:1px solid var(--border);border-radius:var(--r);background:var(--surface)}
+.pr-wahl{display:flex;align-items:center;gap:10px;min-height:44px;padding:4px 12px;cursor:pointer;overflow-wrap:anywhere}
+.pr-wahl:hover{background:var(--surface-2)}
+.pr-wahl input{width:22px;height:22px;flex:none;accent-color:var(--accent)}
+.pr-fragen input{width:100px;min-height:40px}
+.pr-hinweis{background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:.92rem}
+.pr-fehler{background:var(--err-soft);color:var(--err);border:1px solid color-mix(in srgb,var(--err) 40%,var(--border));border-radius:8px;padding:10px 12px;font-size:.92rem;display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.pr-fehler[hidden],.pr-denkt[hidden]{display:none}
+
+/* Chat */
+.pr-kopf{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between}
+.pr-verlauf{display:flex;flex-direction:column;gap:10px;max-height:min(55vh,520px);overflow-y:auto;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)}
+.pr-verlauf-statisch{max-height:none;margin-top:8px}
+.pr-zeile{display:flex}
+.pr-zeile.pruefer{justify-content:flex-start}
+.pr-zeile.schueler{justify-content:flex-end}
+.pr-blase{max-width:min(88%,560px);padding:10px 14px;border-radius:16px;border:1px solid var(--border);overflow-wrap:anywhere;line-height:1.5}
+.pr-zeile.pruefer .pr-blase{background:var(--surface-2);color:var(--text);border-bottom-left-radius:4px}
+.pr-zeile.schueler .pr-blase{background:var(--accent-soft);color:var(--ink);border-color:color-mix(in srgb,var(--accent) 35%,var(--border));border-bottom-right-radius:4px}
+.pr-wer{display:block;font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.pr-text{white-space:pre-wrap}
+.pr-denkt{color:var(--muted);font-style:italic;padding:4px 6px;animation:pr-puls 1.4s ease-in-out infinite}
+@keyframes pr-puls{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.pr-denkt{animation:none}}
+.pr-eingabe{display:flex;flex-direction:column;gap:8px}
+.pr-eingabe textarea{width:100%;box-sizing:border-box;min-height:96px;font-family:var(--sans);font-size:1rem;line-height:1.5}
+.pr-eingabe label.feld span.hilfe{margin-left:6px}
+.pr-aktionen{justify-content:flex-end}
+.pr-aktionen-zusatz{display:inline-flex;gap:8px;margin-right:auto}
+.pr-aktionen-zusatz:empty{display:none}
+
+/* Ergebnis */
+.pr-note-box{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:22px 16px;border-width:2px}
+.pr-note{font-family:var(--serif);font-size:5rem;line-height:1;font-weight:700;color:var(--ink)}
+.pr-note-name{font-family:var(--serif);font-size:1.5rem;color:var(--ink);font-weight:600}
+.pr-punkte{color:var(--text);font-size:1rem}
+.pr-note-box.note-1,.pr-note-box.note-2{background:var(--ok-soft);border-color:var(--ok)}
+.pr-note-box.note-3{background:var(--warn-soft);border-color:var(--warn)}
+.pr-note-box.note-4,.pr-note-box.note-5{background:var(--err-soft);border-color:var(--err)}
+.pr-abschnitt{display:flex;flex-direction:column;gap:8px}
+.pr-begruendung{line-height:1.6;overflow-wrap:anywhere}
+.pr-luecken,.pr-rueck{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.pr-luecke,.pr-rueck-eintrag{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:4px;overflow-wrap:anywhere}
+.pr-link{display:inline-flex;align-items:center;min-height:40px;font-weight:700;color:var(--accent)}
+.pr-rueck-kopf{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between}
+.pr-label{font-weight:700;color:var(--ink)}
+.pr-gespraech>summary{display:flex;align-items:center;min-height:40px;cursor:pointer;font-weight:600;color:var(--ink)}
+.pr-ende{margin-top:4px}
+
+@media (max-width:480px){
+  .pr-blase{max-width:94%}
+  .pr-note{font-size:4rem}
+  .pr-aktionen .btn,.pr-kopf .btn{flex:1 1 auto}
+}
+
+/* Mikrofon (T012) */
+.pr-mikro{display:inline-flex;align-items:center;gap:6px;min-height:44px}
+.pr-mikro[aria-pressed="true"]{background:var(--err-soft);border-color:var(--err);color:var(--ink)}
+.pr-mikro.hoert [aria-hidden]{animation:pr-puls 1.1s ease-in-out infinite}
+.pr-mikro-status{flex:1 1 100%;order:5;overflow-wrap:anywhere}
+.pr-mikro-status:empty{display:none}
+@keyframes pr-puls{50%{opacity:.35}}
+@media (prefers-reduced-motion:reduce){.pr-mikro.hoert [aria-hidden]{animation:none}}
+.pr-aktionen-zusatz{flex-wrap:wrap;align-items:center}
+
+/* Verlauf (T015) */
+.pr-liste-box{display:flex;flex-direction:column;gap:10px}
+.pr-liste{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.pr-eintrag{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:8px;overflow-wrap:anywhere}
+.pr-eintrag-kopf{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:space-between}
+.pr-datum{font-weight:700;color:var(--ink)}
+.pr-eintrag .btn{min-height:40px;min-width:40px}

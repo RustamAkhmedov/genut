@@ -9,6 +9,7 @@ const {SVG} = require('mathjax-full/js/output/svg.js');
 const {liteAdaptor} = require('mathjax-full/js/adaptors/liteAdaptor.js');
 const {RegisterHTMLHandler} = require('mathjax-full/js/handlers/html.js');
 const {AllPackages} = require('mathjax-full/js/input/tex/AllPackages.js');
+const texSicher = require('../ui/tex_sicher.js');
 
 const [,, inPath, outPath] = process.argv;
 const src = fs.readFileSync(inPath, 'utf8');
@@ -85,6 +86,7 @@ const tex = new TeX({
   processEscapes: false,
   formatError: (jax, err) => { fehler++; console.error('TeX-Fehler: ' + err.message); return jax.formatError(err); }
 });
+tex.postFilters.add(texSicher);
 const svg = new SVG({fontCache: 'global'});
 const doc = mathjax.document(`<!DOCTYPE html><html><head></head><body>${bodyPart}</body></html>`, {InputJax: tex, OutputJax: svg});
 doc.render();

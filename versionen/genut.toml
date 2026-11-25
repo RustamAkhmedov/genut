@@ -1,0 +1,28 @@
+# gen_Ut – öffentliche Version: erkennt Claude, Gemini und ein lokales Modell (Ollama, experimentell)
+[server]
+host = "127.0.0.1"
+port = 8765
+
+[modell]
+standard = "gemini"                             # setzt das Setup (erste bereite KI: Claude → Gemini → Lokal)
+auswahl = ["claude_code", "gemini", "ollama"]   # KIs im Schalter oben
+
+[claude_code]
+befehl = "claude"
+modell = ""
+
+[gemini]
+modell = ""
+# Schlüssel NICHT hier, sondern in .env:  GEMINI_API_KEY=…
+
+[ollama]
+url = "http://localhost:11434"
+modell = "gemma3:4b"   # setzt das Setup oder der Dialog „Lokal einrichten“
+
+[funktionen]
+lernplan = true
+pruefung = "auto"      # an, sobald die Claude-CLI bereit ist; true/false erzwingen
+austausch = true       # Projekte als HTML teilen und importieren
+
+[pages]
+aktiv = false

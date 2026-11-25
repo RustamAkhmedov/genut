@@ -5,6 +5,7 @@ const {SVG} = require('mathjax-full/js/output/svg.js');
 const {liteAdaptor} = require('mathjax-full/js/adaptors/liteAdaptor.js');
 const {RegisterHTMLHandler} = require('mathjax-full/js/handlers/html.js');
 const {AllPackages} = require('mathjax-full/js/input/tex/AllPackages.js');
+const texSicher = require('../ui/tex_sicher.js');
 
 let input = '';
 process.stdin.on('data', (d) => { input += d; });
@@ -16,6 +17,7 @@ process.stdin.on('end', () => {
     packages: AllPackages.filter(p => !['bussproofs', 'physics'].includes(p)),
     formatError: (jax, err) => { throw err; },
   });
+  tex.postFilters.add(texSicher);
   const doc = mathjax.document('', {InputJax: tex, OutputJax: new SVG({fontCache: 'none'})});
   const out = [];
   for (const it of items) {

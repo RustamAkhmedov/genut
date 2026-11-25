@@ -1,0 +1,18 @@
+# Vorschläge für das lokale Modell (einzige Quelle für Setup und Tool, research.md R6)
+[[modell]]
+stufe = "klein"
+name = "gemma3:4b"
+download_gb = 3.3
+bedarf_gb = 6
+
+[[modell]]
+stufe = "mittel"
+name = "qwen3-vl:8b"
+download_gb = 6.1
+bedarf_gb = 10
+
+[[modell]]
+stufe = "groß"
+name = "gemma3:12b"
+download_gb = 8.1
+bedarf_gb = 14

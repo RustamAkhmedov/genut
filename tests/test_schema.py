@@ -47,3 +47,13 @@ def test_zusatzfelder_abgelehnt(doc):
     roh["themen"][0]["bloecke"][0]["html"] = "<script>"
     with pytest.raises(ValidationError):
         Dokument.model_validate(roh)
+
+
+def test_fach_mit_falschem_typ_ist_validierungsfehler():
+    import pytest
+    from pydantic import ValidationError
+
+    from genut.schema import ProjektKopf
+
+    with pytest.raises(ValidationError):
+        ProjektKopf(titel="x", fach=[])

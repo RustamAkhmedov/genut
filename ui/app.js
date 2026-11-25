@@ -6,7 +6,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 
 /* ---------------- API ---------------- */
 async function api(method, path, body, roh = false) {
-  const opt = { method, headers: {} };
+  const opt = { method, headers: { 'X-Genut': '1' } };  // Schreibschutz (genut/schutz.py)
   if (body instanceof FormData) opt.body = body;
   else if (body !== undefined) { opt.body = roh ? body : JSON.stringify(body); opt.headers['Content-Type'] = 'application/json'; }
   const r = await fetch('/api' + path, opt);
@@ -33,6 +33,8 @@ function frage(titel, html, ja = 'OK', gefahr = false) {
     f.innerHTML = `<h2>${esc(titel)}</h2><div>${html}</div>
       <div class="reihe ende"><button class="btn" value="nein">Abbrechen</button><button class="btn ${gefahr ? 'gefahr' : 'primary'}" value="ja">${esc(ja)}</button></div>`;
     d.onclose = () => resolve(d.returnValue === 'ja');
+    // Enter in einem Textfeld bestätigt (letzter Knopf), statt den ersten Knopf „Abbrechen“ auszulösen
+    f.onkeydown = (ev) => { if (ev.key === 'Enter' && ev.target.matches('input')) { ev.preventDefault(); f.querySelector('button[value="ja"]').click(); } };
     d.returnValue = ''; d.showModal();
   });
 }
@@ -141,7 +143,21 @@ function jobVerfolgen(jobId, logEl, balken) {
     es.onerror = () => { es.close(); resolve({ typ: 'fehler', text: 'Verbindung zum Server verloren' }); };
   });
 }
+/** Ein Modul hat den Auftrag vor dem Start abgelehnt (und selbst gemeldet, warum). */
+class StillerAbbruch extends Error {}
+/** Fehler als Meldung zeigen; ein stiller Abbruch bleibt ohne Meldung. */
+const fehlerMelden = (e) => { if (!(e instanceof StillerAbbruch)) toast(e.message, true); };
+/** Fragt die vorAuftrag-Hooks nacheinander; beim ersten `false` wird nicht gestartet. */
+async function auftragErlaubt(slug, auftrag) {
+  if (!VOR_AUFTRAG.length) return true;
+  const modell = auftrag.modell || (await api('GET', `/projekte/${slug}`)).modell;
+  for (const fn of VOR_AUFTRAG) {
+    if (await fn({ art: auftrag.art, slug, modell }) === false) return false;
+  }
+  return true;
+}
 async function jobStarten(slug, auftrag, logEl, balken) {
+  if (!await auftragErlaubt(slug, auftrag)) throw new StillerAbbruch('Auftrag nicht gestartet');
   logEl.hidden = false;
   const { job_id } = await api('POST', `/projekte/${slug}/jobs`, auftrag);
   return jobVerfolgen(job_id, logEl, balken);
@@ -171,14 +187,62 @@ async function kiLaden() {
 const modellOptionen = (gewaehlt) => [...new Set([...KI.auswahl, gewaehlt])].filter(Boolean)
   .map(m => `<option value="${m}" ${m === gewaehlt ? 'selected' : ''}>${esc(MODELL_NAME[m] || m)}</option>`).join('');
 
+/* ---------------- Module (entfernbare Funktionen, ui/funktionen/<name>.js) ---------------- */
+const MODUL_ROUTEN = {};
+const MODUL_SCHRITTE = [];
+const KI_SCHALTER = [];
+const VOR_AUFTRAG = [];
+const BEREICHE = {};
+/** Ruft alle für `name` angemeldeten Funktionen mit (element, daten) auf. Fehler werden gemeldet, ohne abzubrechen. */
+function bereichFuellen(name, element, daten) {
+  return Promise.all((BEREICHE[name] || []).map(async (fn) => {
+    try { await fn(element, daten); } catch (e) { console.error(e); toast(`Modul: ${e?.message || e}`, true); }
+  }));
+}
+function menueEintrag({ text, href }) {
+  const a = document.createElement('a');
+  a.href = href; a.textContent = text;
+  $('header.kopf nav').appendChild(a);
+}
+const HOOKS = {
+  api, esc, toast, frage,
+  menue: menueEintrag,
+  route: (name, fn) => { MODUL_ROUTEN[name] = fn; },
+  // Projektschritt nach der Formelsammlung: sichtbar(p) -> bool, fn(p, ziel, extra) zeichnet den Inhalt.
+  schritt: (name, titel, sichtbar, fn) => { MODUL_SCHRITTE.push({ name, titel, sichtbar, fn }); },
+  zeigeVorschau: (slug, thema_id) => { location.hash = `#/p/${slug}/vorschau/${thema_id}`; },
+  // Nach jedem Zeichnen des KI-Schalters: fn(knoepfe, status), knoepfe = {name: button}. Klick über button.onclick ersetzen.
+  kiSchalter: (fn) => { KI_SCHALTER.push(fn); },
+  // Vor jedem Auftrag: fn({art, slug, modell}) -> false bricht still ab (das Modul zeigt die Meldung selbst).
+  vorAuftrag: (fn) => { VOR_AUFTRAG.push(fn); },
+  bereich: (name, fn) => { (BEREICHE[name] = BEREICHE[name] || []).push(fn); },
+  bereichFuellen,
+  diagrammeZeichnen,
+};
+async function moduleLaden() {
+  const ki = await kiLaden();
+  for (const name of ki.module || []) {
+    try {
+      const m = await import(`/ui/funktionen/${name}.js`);
+      await m.start(HOOKS);
+    } catch (e) { toast(`Modul „${name}“ konnte nicht geladen werden: ${e.message}`, true); }
+  }
+}
+const MODULE_BEREIT = moduleLaden();
+
 /* ---------------- Router ---------------- */
 async function route() {
+  await MODULE_BEREIT;
+  const hinweis = $('[data-bereich="kopf-hinweis"]');
+  hinweis.replaceChildren();
+  bereichFuellen('kopf-hinweis', hinweis, { slug: aktuellesProjekt() });
   await faecherLaden();
   const teile = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   try {
     if (!teile.length) return await seiteProjekte();
     if (teile[0] === 'einstellungen') return await seiteEinstellungen();
     if (teile[0] === 'p' && teile[1]) return await seiteProjekt(teile[1], teile[2], teile[3]);
+    if (MODUL_ROUTEN[teile[0]]) return await MODUL_ROUTEN[teile[0]](teile.slice(1), app);
     location.hash = '#/';
   } catch (e) {
     app.innerHTML = `<div class="karte eng"><h2>Fehler</h2><p>${esc(e.message)}</p><a href="#/">Zur Übersicht</a></div>`;
@@ -205,18 +269,25 @@ async function kiSchalterZeigen() {
   const s = $('.ki-schalter');
   const optionen = [...new Set([...status.auswahl, wert])].filter(Boolean);
   s.hidden = optionen.length < 2;
+  const fokus = s.contains(document.activeElement) ? document.activeElement.dataset.ki : null;  // Neuzeichnen
   s.querySelectorAll('[data-ki]').forEach(b => b.remove());
+  const knoepfe = {};
   for (const m of optionen) {
     const b = document.createElement('button');
     b.type = 'button'; b.setAttribute('role', 'radio'); b.dataset.ki = m; b.textContent = (MODELL_NAME[m] || m).replace(/ \(.*\)$/, '');
-    b.addEventListener('click', () => kiWaehlen(m));
+    b.onclick = () => kiWaehlen(m);
     s.appendChild(b);
+    knoepfe[m] = b;
   }
   document.querySelectorAll('.ki-schalter [data-ki]').forEach(b => {
     const an = b.dataset.ki === wert;
     b.classList.toggle('an', an); b.setAttribute('aria-checked', an ? 'true' : 'false');
   });
+  if (fokus && knoepfe[fokus]) knoepfe[fokus].focus();
   s.title = aktuellesProjekt() ? 'KI für dieses Projekt (und Standard für neue Projekte)' : 'KI für neue Projekte';
+  for (const fn of KI_SCHALTER) {
+    try { fn(knoepfe, status); } catch (e) { console.error(e); }
+  }
 }
 
 async function kiWaehlen(ki) {
@@ -234,24 +305,135 @@ async function kiWaehlen(ki) {
 }
 window.addEventListener('hashchange', kiSchalterZeigen);
 kiSchalterZeigen();
+// Das erste Zeichnen kann vor dem Laden der Module liegen
+MODULE_BEREIT.then(() => { if (KI_SCHALTER.length) kiSchalterZeigen(); });
 
 /* ---------------- Projekte ---------------- */
 const STATUS_CHIP = { hochgeladen: '', transkribiert: 'warn', kontrolliert: 'akz', verarbeitet: 'ok' };
 
+const NEUE_GRUPPE = '__neu__';
+
+function gruppenOptionen(gruppen, aktuell) {
+  return `<option value="">Ohne Gruppe</option>${gruppen.map(g => `<option value="${esc(g.id)}" ${g.id === aktuell ? 'selected' : ''}>${esc(g.name)}</option>`).join('')}<option value="${NEUE_GRUPPE}">Neue Gruppe …</option>`;
+}
+
+/** Fragt den Namen einer neuen Gruppe ab und legt sie an; null bei Abbruch oder Fehler. */
+async function gruppeAnlegenDialog() {
+  const ok = await frage('Neue Gruppe', '<label class="feld">Name<input type="text" id="gruppeName" maxlength="60" required autofocus placeholder="z. B. Schularbeit Jänner"></label>', 'Anlegen');
+  const name = ($('#gruppeName') ? $('#gruppeName').value : '').trim();
+  if (!ok || !name) return null;
+  try { return await api('POST', '/gruppen', { name }); } catch (e) { toast(e.message, true); return null; }
+}
+
+const ANSICHT_KEY = 'genut.ansicht';
+const ANSICHT_MODI = [['gruppen', 'Eigene Gruppen'], ['fach', 'Nach Fach'], ['keine', 'Keine']];
+const ANSICHT_SORT = [['gebaut', 'Zuletzt gebaut'], ['name', 'Name A–Z'], ['fach', 'Fach']];
+
+function ansichtLesen() {
+  const std = { modus: 'gruppen', sortierung: 'gebaut', zu: [] };
+  try {
+    const a = JSON.parse(localStorage.getItem(ANSICHT_KEY));
+    if (!a || typeof a !== 'object') return std;
+    return {
+      modus: ANSICHT_MODI.some(([k]) => k === a.modus) ? a.modus : std.modus,
+      sortierung: ANSICHT_SORT.some(([k]) => k === a.sortierung) ? a.sortierung : std.sortierung,
+      zu: Array.isArray(a.zu) ? a.zu.filter(x => typeof x === 'string') : []
+    };
+  } catch (e) { return std; }
+}
+
+function ansichtSpeichern(a) {
+  try { localStorage.setItem(ANSICHT_KEY, JSON.stringify(a)); } catch (e) { /* ohne Speicher weiter */ }
+}
+
 async function seiteProjekte() {
-  const liste = await api('GET', '/projekte');
-  app.innerHTML = `<div class="eng">
-    <div class="kopfzeile"><h1>Projekte</h1><button class="btn primary" id="neuBtn">Neues Projekt</button></div>
-    <div class="projekte">${liste.map(p => `
+  const ansicht = ansichtLesen();
+  const abfrage = `?modus=${encodeURIComponent(ansicht.modus)}&sortierung=${encodeURIComponent(ansicht.sortierung)}`;
+  const [daten, gruppen] = await Promise.all([api('GET', '/projektliste' + abfrage), api('GET', '/gruppen')]);
+  const abschnitte = daten.abschnitte || [];
+  const karte = (p) => `
       <a class="karte projekt" href="#/p/${esc(p.slug)}">
         <h3>${esc(p.name)}</h3>
         <div class="reihe"><span class="chip">${esc(fachName(p.fach))}</span><span class="chip">${p.fotos.length} Foto${p.fotos.length === 1 ? '' : 's'}</span>
           ${p.zahlen ? `<span class="chip">${p.zahlen.themen} Themen · ${p.zahlen.aufgaben} Aufgaben · ${p.zahlen.quiz || 0} Quizfragen</span>` : ''}
-          ${p.pages.veroeffentlicht ? '<span class="chip ok">online</span>' : ''}${p.laeuft ? '<span class="chip akz">läuft …</span>' : ''}</div>
+          ${p.pages.veroeffentlicht ? '<span class="chip ok">online</span>' : ''}${p.laeuft ? '<span class="chip akz">läuft …</span>' : ''}<span data-bereich="projekt-chips" data-slug="${esc(p.slug)}"></span></div>
         <span class="muted klein">${p.letzter_build ? 'Zuletzt gebaut ' + new Date(p.letzter_build).toLocaleString('de-AT') : 'Noch nicht gebaut'}</span>
-      </a>`).join('') || '<p class="leer">Noch keine Projekte. Leg eines an und lade Fotos hoch.</p>'}
-    </div></div>`;
+        <label class="gruppen-wahl">Gruppe<select data-slug="${esc(p.slug)}" data-alt="${esc(p.gruppe || '')}">${gruppenOptionen(gruppen, p.gruppe || '')}</select></label>
+      </a>`;
+  const mitKopf = ansicht.modus === 'fach' || (ansicht.modus === 'gruppen' && gruppen.length > 0);
+  const optionen = (liste, aktuell) => liste.map(([k, t]) => `<option value="${k}" ${k === aktuell ? 'selected' : ''}>${esc(t)}</option>`).join('');
+  const abschnitt = (a) => {
+    const projekte = `<div class="projekte">${a.projekte.map(karte).join('') || '<p class="gruppe-leer">Keine Projekte in dieser Gruppe.</p>'}</div>`;
+    if (!mitKopf) return projekte;
+    const zu = ansicht.zu.includes(a.id);
+    return `<section class="gruppe${zu ? ' zu' : ''}" data-id="${esc(a.id)}">
+      <div class="gruppe-kopf"><h2 style="margin:0">
+        <button type="button" class="gruppe-titel" aria-expanded="${zu ? 'false' : 'true'}"><span class="gruppe-pfeil" aria-hidden="true">▾</span><span class="gruppe-name">${esc(a.titel)}</span><span class="gruppe-zaehler">${a.anzahl}</span></button></h2>
+        ${a.art === 'gruppe' ? `<div class="gruppe-aktionen"><button type="button" class="btn klein" data-umbenennen="${esc(a.id)}" data-name="${esc(a.titel)}">Umbenennen</button><button type="button" class="btn klein gefahr" data-loeschen="${esc(a.id)}" data-name="${esc(a.titel)}">Löschen</button></div>` : ''}</div>
+      ${projekte}</section>`;
+  };
+  const leer = abschnitte.every(a => !a.projekte.length) && !mitKopf;
+  app.innerHTML = `<div class="eng">
+    <div class="kopfzeile"><h1>Projekte</h1><div class="reihe ende"><span data-bereich="projektliste-aktionen"></span><button class="btn primary" id="neuBtn">Neues Projekt</button></div></div>
+    <div class="kopfleiste">
+      <label class="feld">Gruppieren<select id="modusSel">${optionen(ANSICHT_MODI, ansicht.modus)}</select></label>
+      <label class="feld">Sortieren<select id="sortSel">${optionen(ANSICHT_SORT, ansicht.sortierung)}</select></label>
+      <button class="btn klein btn-gruppe-neu" id="gruppeNeuBtn" type="button">Neue Gruppe</button></div>
+    ${leer ? '<p class="leer">Noch keine Projekte. Leg eines an und lade Fotos hoch.</p>' : abschnitte.map(abschnitt).join('')}
+    </div>`;
   $('#neuBtn').onclick = neuesProjekt;
+  $('#gruppeNeuBtn').onclick = async () => { if (await gruppeAnlegenDialog()) route(); };
+  $('#modusSel').onchange = (ev) => { ansichtSpeichern({ ...ansichtLesen(), modus: ev.target.value }); route(); };
+  $('#sortSel').onchange = (ev) => { ansichtSpeichern({ ...ansichtLesen(), sortierung: ev.target.value }); route(); };
+  $$('.gruppe-titel').forEach(b => {
+    b.onclick = () => {
+      const g = b.closest('.gruppe'); const zu = g.classList.toggle('zu'); b.setAttribute('aria-expanded', String(!zu));
+      const a = ansichtLesen(); const id = g.dataset.id;
+      a.zu = a.zu.filter(x => x !== id); if (zu) a.zu.push(id);
+      ansichtSpeichern(a);
+    };
+  });
+  $$('[data-umbenennen]').forEach(b => {
+    b.onclick = async () => {
+      const ok = await frage('Gruppe umbenennen', `<label class="feld">Name<input type="text" id="gruppeNeuerName" maxlength="60" required autofocus value="${esc(b.dataset.name)}"></label>`, 'Umbenennen');
+      const name = ($('#gruppeNeuerName') ? $('#gruppeNeuerName').value : '').trim();
+      if (!ok || !name || name === b.dataset.name) return;
+      try { await api('PATCH', `/gruppen/${encodeURIComponent(b.dataset.umbenennen)}`, { name }); route(); } catch (e) { toast(e.message, true); }
+    };
+  });
+  $$('[data-loeschen]').forEach(b => {
+    b.onclick = async () => {
+      if (!await frage('Gruppe löschen?', `<p>Die Gruppe „${esc(b.dataset.name)}“ wird gelöscht. Ihre Projekte bleiben erhalten und wandern nach „Ohne Gruppe“.</p>`, 'Löschen', true)) return;
+      try {
+        const r = await api('DELETE', `/gruppen/${encodeURIComponent(b.dataset.loeschen)}`);
+        const a = ansichtLesen(); a.zu = a.zu.filter(x => x !== b.dataset.loeschen); ansichtSpeichern(a);
+        toast(r.verschoben === 1 ? 'Gruppe gelöscht, 1 Projekt nach „Ohne Gruppe“ verschoben' : `Gruppe gelöscht, ${r.verschoben} Projekte nach „Ohne Gruppe“ verschoben`);
+        route();
+      } catch (e) { toast(e.message, true); }
+    };
+  });
+  $$('.gruppen-wahl').forEach(l => {
+    l.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); });
+    const sel = $('select', l);
+    sel.addEventListener('change', async (ev) => {
+      ev.stopPropagation();
+      let ziel = sel.value;
+      try {
+        if (ziel === NEUE_GRUPPE) {
+          const g = await gruppeAnlegenDialog();
+          if (!g) { sel.value = sel.dataset.alt; return; }
+          ziel = g.id;
+        }
+        await api('PATCH', `/projekte/${sel.dataset.slug}`, { gruppe: ziel });
+        route();
+      } catch (e) { toast(e.message, true); sel.value = sel.dataset.alt; }
+    });
+  });
+  // Bei jedem Zeichnen ein neues Element: Module hängen hier an (nicht an app, das über Seitenwechsel bleibt)
+  const liste = app.firstElementChild;
+  bereichFuellen('projektliste-aktionen', $('[data-bereich="projektliste-aktionen"]', liste), { liste });
+  const jeSlug = new Map(abschnitte.flatMap(a => a.projekte).map(p => [p.slug, p]));
+  $$('[data-bereich="projekt-chips"]', liste).forEach(el => bereichFuellen('projekt-chips', el, jeSlug.get(el.dataset.slug)));
 }
 
 async function neuesProjekt() {
@@ -289,16 +471,19 @@ async function neuesProjekt() {
 }
 
 /* ---------------- Projekt ---------------- */
-const SCHRITTE = [['fotos', 'Fotos'], ['transkripte', 'Transkripte'], ['generieren', 'Generieren'], ['vorschau', 'Vorschau'], ['export', 'Export']];
+const SCHRITTE = [['fotos', 'Fotos'], ['transkripte', 'Transkripte'], ['generieren', 'Generieren'], ['vorschau', 'Vorschau'], ['formelsammlung', 'Formelsammlung'], ['export', 'Export']];
 
 async function seiteProjekt(slug, tab, extra) {
   const p = await api('GET', `/projekte/${slug}`);
   // Fertig gebaute Projekte öffnen direkt in der Vorschau (zum Üben), neue bei den Fotos.
   if (!tab) tab = p.hat_seite ? 'vorschau' : 'fotos';
+  const schritteListe = [...SCHRITTE];
+  const fe = schritteListe.findIndex(([k]) => k === 'formelsammlung') + 1;
+  schritteListe.splice(fe, 0, ...MODUL_SCHRITTE.filter((m) => m.name === tab || m.sichtbar(p)).map((m) => [m.name, m.titel]));
   app.innerHTML = `
     <div class="kopfzeile"><div><div class="eyebrow">${esc(fachName(p.fach))} · ${esc(MODELL_NAME[p.modell] || p.modell)}</div><h1>${esc(p.name)}</h1></div>
       <div class="reihe"><button class="btn klein" id="einstBtn">Einstellungen</button><button class="btn klein gefahr" id="delBtn">Löschen</button></div></div>
-    <nav class="stepper" aria-label="Schritte">${SCHRITTE.map(([k, l], i) => `<a href="#/p/${slug}/${k}" ${k === tab ? 'aria-current="step"' : ''}><span class="n">${i + 1}</span>${l}</a>`).join('')}</nav>
+    <nav class="stepper" aria-label="Schritte">${schritteListe.filter(([k]) => k !== 'formelsammlung' || p.hat_seite || tab === k).map(([k, l], i) => `<a href="#/p/${slug}/${k}" ${k === tab ? 'aria-current="step"' : ''}><span class="n">${i + 1}</span>${l}</a>`).join('')}</nav>
     <section id="inhalt"></section>`;
   $('#delBtn').onclick = async () => {
     if (await frage('Projekt löschen?', `<p>„${esc(p.name)}“ wird in den Papierkorb (<code>projekte/.geloescht/</code>) verschoben.</p>`, 'Löschen', true)) {
@@ -307,11 +492,14 @@ async function seiteProjekt(slug, tab, extra) {
   };
   $('#einstBtn').onclick = () => projektEinstellungen(p);
   const ziel = $('#inhalt');
-  const fn = { fotos: tabFotos, transkripte: tabTranskripte, generieren: tabGenerieren, vorschau: tabVorschau, export: tabExport }[tab] || tabFotos;
+  const modul = MODUL_SCHRITTE.find((m) => m.name === tab);
+  const fn = modul ? modul.fn : { fotos: tabFotos, transkripte: tabTranskripte, generieren: tabGenerieren, vorschau: tabVorschau, formelsammlung: tabFormelsammlung, export: tabExport }[tab] || tabFotos;
   await fn(p, ziel, extra);
 }
 
-function projektEinstellungen(p) {
+async function projektEinstellungen(p) {
+  let gruppen = [];
+  try { gruppen = await api('GET', '/gruppen'); } catch (err) { toast(err.message, true); return; }
   const d = $('#dlg'), f = $('#dlgForm'), e = p.einstellungen;
   f.innerHTML = `<h2>Einstellungen</h2><div class="raster raster-2">
     <label class="feld">Modell<select name="modell">${modellOptionen(p.modell)}</select></label>
@@ -319,15 +507,23 @@ function projektEinstellungen(p) {
     <label class="feld">Karteikarten<input type="text" name="karten" value="${esc(e.karten)}"><span class="hilfe">„auto“ oder Zahl je Thema</span></label>
     <label class="feld">Quizfragen je Thema<input type="number" name="quiz" min="0" max="10" value="${e.quiz_pro_thema ?? 5}"></label>
     <label class="feld">Erklärstil<select name="stil"><option value="knapp" ${e.erklaerstil === 'knapp' ? 'selected' : ''}>knapp</option><option value="ausfuehrlich" ${e.erklaerstil === 'ausfuehrlich' ? 'selected' : ''}>ausführlich</option></select></label>
-    <label class="feld">Max. Korrekturrunden<input type="number" name="runden" min="0" max="5" value="${e.max_korrekturrunden}"></label></div>
+    <label class="feld">Max. Korrekturrunden<input type="number" name="runden" min="0" max="5" value="${e.max_korrekturrunden}"></label>
+    <label class="feld">Gruppe<select name="gruppe" id="gruppeSel">${gruppenOptionen(gruppen, p.gruppe || '')}</select></label>
+    <label class="feld" id="gruppeNeuFeld" hidden>Name der neuen Gruppe<input type="text" name="gruppe_neu" maxlength="60"></label></div>
     <div class="reihe ende"><button class="btn" value="nein">Abbrechen</button><button class="btn primary" value="ja">Speichern</button></div>`;
   d.returnValue = '';
+  $('#gruppeSel').onchange = (ev) => { $('#gruppeNeuFeld').hidden = ev.target.value !== NEUE_GRUPPE; };
   d.onclose = async () => {
     if (d.returnValue !== 'ja') return;
     const fd = new FormData(f);
     const k = String(fd.get('karten')).trim();
     try {
-      await api('PATCH', `/projekte/${p.slug}`, { modell: fd.get('modell'), einstellungen: {
+      let gruppe = fd.get('gruppe');
+      if (gruppe === NEUE_GRUPPE) {
+        const name = String(fd.get('gruppe_neu') || '').trim();
+        gruppe = name ? (await api('POST', '/gruppen', { name })).id : (p.gruppe || '');
+      }
+      await api('PATCH', `/projekte/${p.slug}`, { modell: fd.get('modell'), gruppe, einstellungen: {
         probeaufgaben_pro_thema: +fd.get('probe'), karten: k === 'auto' ? 'auto' : +k, erklaerstil: fd.get('stil'), max_korrekturrunden: +fd.get('runden'),
         quiz_pro_thema: +fd.get('quiz') } });
       toast('Gespeichert'); route();
@@ -340,6 +536,7 @@ function projektEinstellungen(p) {
 async function tabFotos(p, ziel) {
   const neu = p.fotos.filter(f => f.status === 'hochgeladen').length;
   ziel.innerHTML = `
+    <div data-bereich="fotos-hinweis"></div>
     <label class="drop" id="drop" tabindex="0">
       <input type="file" id="datei" multiple accept=".jpg,.jpeg,.png,.webp,.heic,.heif,image/*,.pdf,.docx,.pptx,.html,.htm,.md,.markdown,.txt" hidden>
       <strong>Fotos oder Dateien hierher ziehen</strong> oder klicken zum Auswählen<br><span class="klein">Fotos: JPG, PNG, WebP, HEIC · Dateien: PDF, Word (.docx), PowerPoint (.pptx), gespeicherte Webseiten (.html), Markdown, Text · Reihenfolge per Ziehen ändern</span>
@@ -356,6 +553,7 @@ async function tabFotos(p, ziel) {
       <a class="btn" href="#/p/${p.slug}/transkripte">Weiter zu den Transkripten</a></div>
     <div class="fortschritt" hidden id="fbar"><span></span></div>
     <div class="log abstand" id="log" hidden></div>`;
+  bereichFuellen('fotos-hinweis', $('[data-bereich="fotos-hinweis"]', ziel), p);
   const drop = $('#drop'), input = $('#datei');
   const hoch = async (files) => {
     if (!files.length) return;
@@ -398,8 +596,14 @@ async function tabFotos(p, ziel) {
 
   const fbar = $('#fbar');
   const starte = async (auftrag) => {
+    const vorher = fbar.hidden;
     $('#tkBtn').disabled = true; fbar.hidden = false;
-    const e = await jobStarten(p.slug, auftrag, $('#log'), $('span', fbar));
+    let e;
+    try { e = await jobStarten(p.slug, auftrag, $('#log'), $('span', fbar)); }
+    catch (err) {
+      if (!(err instanceof StillerAbbruch)) throw err;
+      $('#tkBtn').disabled = false; fbar.hidden = vorher; return;
+    }
     toast(e.typ === 'fertig' ? 'Transkription fertig' : e.text, e.typ !== 'fertig');
     if (e.typ === 'fertig') setTimeout(() => { location.hash = `#/p/${p.slug}/transkripte`; }, 800);
   };
@@ -548,7 +752,7 @@ async function tabTranskripte(p, ziel, auswahl) {
     try {
       const e = await jobStarten(p.slug, { art: 'transkribieren', dateien: [akt.datei] }, $('#log'));
       toast(e.typ === 'fertig' ? 'Neu transkribiert' : e.text, e.typ !== 'fertig'); route();
-    } catch (err) { toast(err.message, true); $('#neuTk').disabled = false; }
+    } catch (err) { fehlerMelden(err); $('#neuTk').disabled = false; }
   };
   window.onbeforeunload = () => (geaendert ? true : undefined);
 }
@@ -585,8 +789,13 @@ async function tabGenerieren(p, ziel) {
     $('#gen').disabled = true;
   };
   const los = async (art) => {
+    const vorher = [$('#gen').disabled, $('#bauen').disabled, fbar.hidden];
     $('#gen').disabled = $('#bauen').disabled = true; fbar.hidden = false;
-    try { fertig(await jobStarten(p.slug, { art }, $('#log'), $('span', fbar))); } catch (err) { toast(err.message, true); }
+    try { fertig(await jobStarten(p.slug, { art }, $('#log'), $('span', fbar))); }
+    catch (err) {
+      if (err instanceof StillerAbbruch) [$('#gen').disabled, $('#bauen').disabled, fbar.hidden] = vorher;
+      else toast(err.message, true);
+    }
   };
   $('#gen').onclick = () => los('generieren');
   $('#bauen').onclick = () => los('pruefen_bauen');
@@ -659,7 +868,7 @@ function kurztext(el) {
   return String(t).replace(/\\[()[\]]/g, '').replace(/\s+/g, ' ').slice(0, 90);
 }
 
-async function tabVorschau(p, ziel) {
+async function tabVorschau(p, ziel, extra) {
   if (!p.hat_seite) { ziel.innerHTML = `<p class="leer">Noch keine Seite. <a href="#/p/${p.slug}/generieren">Generieren</a></p>`; return; }
   const doc = await api('GET', `/projekte/${p.slug}/inhalt`);
   ziel.innerHTML = `<div class="reihe ende vs-kopf"><button class="btn klein" id="ergBtn" type="button" title="Fehlende Themen oder Inhalte nachgenerieren lassen">Ergänzen …</button><a class="btn primary klein" href="/api/projekte/${p.slug}/seite" target="_blank" rel="noopener">Zum Üben im ganzen Fenster öffnen ↗</a></div>
@@ -686,12 +895,12 @@ async function tabVorschau(p, ziel) {
       if (d.returnValue !== 'ja') return;
       const hinweis = String(new FormData(f).get('hinweis') || '').trim();
       if (!hinweis) return;
-      const log = $('#log'); log.hidden = false; $('#ergBtn').disabled = true;
+      const log = $('#log'); $('#ergBtn').disabled = true;
       try {
         const e = await jobStarten(p.slug, { art: 'ergaenzen', hinweis }, log);
         toast(e.typ === 'fertig' ? 'Ergänzt' : e.text, e.typ !== 'fertig');
         if (e.typ === 'fertig') route();
-      } catch (err) { toast(err.message, true); }
+      } catch (err) { fehlerMelden(err); }
       $('#ergBtn').disabled = false;
     };
     d.showModal();
@@ -700,6 +909,7 @@ async function tabVorschau(p, ziel) {
     if (n) { toast(`${n} Diagramm(e) gezeichnet`); ifr.src = `/api/projekte/${p.slug}/seite?vorschau=1&t=${Date.now()}`; }
   });
   const zeige = (id) => { try { ifr.contentWindow.postMessage({ genutZeige: id }, '*'); } catch (e) { /* ignorieren */ } };
+  if (extra) ifr.addEventListener('load', () => zeige(extra), { once: true });
   const knoten = (el, typ) => `
     <div class="knoten" data-id="${esc(el.id)}">
       <div class="zeile"><span class="typ">${esc(typ)}</span><span class="txt">${esc(kurztext(el))}</span>
@@ -731,7 +941,7 @@ async function tabVorschau(p, ziel) {
       try {
         const e = await jobStarten(p.slug, { art: 'block_neu', id: k.dataset.id, hinweis: $('input', k).value }, $('#log'));
         toast(e.typ === 'fertig' ? 'Neu generiert' : e.text, e.typ !== 'fertig'); if (e.typ === 'fertig') route(); else neu.disabled = false;
-      } catch (err) { toast(err.message, true); neu.disabled = false; }
+      } catch (err) { fehlerMelden(err); neu.disabled = false; }
     };
   });
   // JSON-Editor
@@ -753,17 +963,117 @@ async function tabVorschau(p, ziel) {
 }
 
 /* ---------------- Tab: Export ---------------- */
+async function tabFormelsammlung(p, ziel) {
+  if (!p.hat_seite) { ziel.innerHTML = `<p class="leer">Noch keine Seite. <a href="#/p/${esc(p.slug)}/generieren">Generieren</a></p>`; return; }
+  const d = await api('GET', `/projekte/${p.slug}/formeln`);
+  const alle = d.themen.flatMap(t => t.formeln);
+  if (!alle.length) { ziel.innerHTML = '<div class="fs-hinweis">Dieses Projekt enthält keine Formeln, daher gibt es nichts für eine Formelsammlung.</div>'; return; }
+  // Zustand: je Formel Werte (bleiben auch bei abgewählten Einträgen erhalten) und Wahl
+  const werte = new Map(), gewaehlt = new Set();
+  const hatVar = (f) => (f.variablen || []).length > 0;
+  const hatErkl = (f) => f.hat_erklaerung ?? !!f.erklaerung_md;
+  // Standard laut Datenmodell: Variablen an, Erklärung aus
+  alle.forEach(f => werte.set(f.id, { variablen: true, erklaerung: false }));
+  (d.auswahl || []).forEach(a => {
+    if (!werte.has(a.block_id)) return;
+    werte.set(a.block_id, { variablen: !!a.variablen, erklaerung: !!a.erklaerung });
+    gewaehlt.add(a.block_id);
+  });
+  ziel.innerHTML = `
+    <div class="fs-kopf"><div class="fs-zaehler" id="fsZaehler" aria-live="polite"></div>
+      <div class="fs-leiste"><button class="btn" type="button" id="fsAlle">Alle</button><button class="btn" type="button" id="fsKeine">Keine</button><button class="btn" type="button" id="fsSpick">Nur Spickzettel</button><button class="btn" type="button" id="fsAlleVar"></button><button class="btn" type="button" id="fsAlleErkl"></button><button class="btn primary" type="button" id="fsPdf">PDF erstellen</button></div></div>
+    <div class="fortschritt fs-fortschritt" id="fsBar" hidden><span></span></div>
+    <div id="fsErgebnis"></div>
+    ${d.themen.filter(t => t.formeln.length).map(t => `<h3 class="fs-thema">${esc(t.titel)}</h3><ul class="fs-liste">${t.formeln.map(f => `
+      <li class="fs-zeile" data-id="${esc(f.id)}"><label class="fs-wahl"><input type="checkbox"> <span>${esc(f.titel)}</span></label>
+        ${f.pruefung === 'fehler' ? '<span class="fs-pruefung">⚠ nicht bestätigt</span>' : f.pruefung === 'nicht_pruefbar' ? '<span class="fs-pruefung">⚠ ungeprüft</span>' : ''}
+        <div class="fs-vorschau">\\[${esc(f.tex)}\\]</div>
+        <div class="fs-schalter"><label><input type="checkbox" data-w="variablen"${hatVar(f) ? '' : ' disabled'}> Variablen</label><label><input type="checkbox" data-w="erklaerung"${hatErkl(f) ? '' : ' disabled'}> Erklärung</label></div></li>`).join('')}</ul>`).join('')}`;
+  const zeilen = [...ziel.querySelectorAll('.fs-zeile')];
+  const zeige = () => {
+    zeilen.forEach(z => {
+      const an = gewaehlt.has(z.dataset.id), w = werte.get(z.dataset.id);
+      z.classList.toggle('gewaehlt', an); z.querySelector('.fs-wahl input').checked = an;
+      z.querySelectorAll('[data-w]').forEach(i => { i.checked = !i.disabled && w[i.dataset.w]; });
+    });
+    const wahlbar = (art) => alle.filter(f => (art === 'variablen' ? hatVar(f) : hatErkl(f)));
+    const knopf = (id, art, wort) => {
+      const l = wahlbar(art), b = $(id);
+      b.disabled = !l.length;
+      b.textContent = `Alle ${wort} ${l.length && l.every(f => werte.get(f.id)[art]) ? 'aus' : 'an'}`;
+    };
+    knopf('#fsAlleVar', 'variablen', 'Variablen'); knopf('#fsAlleErkl', 'erklaerung', 'Erklärungen');
+    $('#fsZaehler').textContent = `${gewaehlt.size} von ${alle.length} Formeln gewählt`;
+  };
+  // Speichern: entprellt nach jeder Änderung, sofort beim Verlassen des Schritts/der Seite und beim Erstellen
+  const eintraegeJetzt = () => alle.filter(f => gewaehlt.has(f.id)).map(f => {
+    const w = werte.get(f.id);
+    return { block_id: f.id, variablen: w.variablen && hatVar(f), erklaerung: w.erklaerung && hatErkl(f) };
+  });
+  let schmutzig = false, timer = null, kette = Promise.resolve();
+  const speichern = () => {
+    clearTimeout(timer); timer = null;
+    if (!schmutzig) return kette;
+    schmutzig = false;
+    const eintraege = eintraegeJetzt();
+    kette = kette.then(() => api('PUT', `/projekte/${p.slug}/formelauswahl`, { eintraege }))
+      .catch(err => { schmutzig = true; toast(`Auswahl nicht gespeichert: ${err.message}`, true); });
+    return kette;
+  };
+  const geaendert = () => { schmutzig = true; clearTimeout(timer); timer = setTimeout(speichern, 600); zeige(); };
+  const verlassen = () => { if (schmutzig) fetch(`/api/projekte/${p.slug}/formelauswahl`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eintraege: eintraegeJetzt() }), keepalive: true }).catch(() => {}); };
+  const wechsel = () => {
+    window.removeEventListener('hashchange', wechsel); window.removeEventListener('pagehide', verlassen);
+    speichern();
+  };
+  window.addEventListener('hashchange', wechsel); window.addEventListener('pagehide', verlassen);
+  zeilen.forEach(z => {
+    z.querySelector('.fs-wahl input').onchange = (ev) => { ev.target.checked ? gewaehlt.add(z.dataset.id) : gewaehlt.delete(z.dataset.id); geaendert(); };
+    z.querySelectorAll('[data-w]').forEach(i => i.onchange = () => { werte.get(z.dataset.id)[i.dataset.w] = i.checked; geaendert(); });
+  });
+  $('#fsAlle').onclick = () => { alle.forEach(f => gewaehlt.add(f.id)); geaendert(); };
+  $('#fsKeine').onclick = () => { gewaehlt.clear(); geaendert(); };
+  $('#fsSpick').onclick = () => { gewaehlt.clear(); alle.filter(f => f.spick).forEach(f => gewaehlt.add(f.id)); geaendert(); };
+  const alleSchalten = (art, l) => { const an = !l.every(f => werte.get(f.id)[art]); l.forEach(f => { werte.get(f.id)[art] = an; }); geaendert(); };
+  $('#fsAlleVar').onclick = () => alleSchalten('variablen', alle.filter(hatVar));
+  $('#fsAlleErkl').onclick = () => alleSchalten('erklaerung', alle.filter(hatErkl));
+  const ergebnis = (r, slug) => {
+    const warn = (r.warnungen || []).length ? `<ul class="fs-warnung">${r.warnungen.map(w => `<li>${esc(w)}</li>`).join('')}</ul>` : '';
+    $('#fsErgebnis').innerHTML = `<div class="fs-ergebnis"><div>Erstellt${r.zeit ? ` am ${esc(r.zeit)}` : ''}: ${esc(r.formeln)} Formeln, ${esc(r.seiten)} Seiten</div>
+      <a class="btn primary" href="/api/projekte/${esc(slug)}/formelsammlung.pdf" download>Herunterladen</a>${warn}</div>`;
+  };
+  if (d.pdf && d.pdf.vorhanden) ergebnis(d.pdf, p.slug);
+  $('#fsPdf').onclick = async () => {
+    const btn = $('#fsPdf'), bar = $('#fsBar');
+    const eintraege = eintraegeJetzt(); schmutzig = false; clearTimeout(timer);
+    btn.disabled = true; btn.textContent = 'Erstelle …';
+    bar.hidden = false; bar.firstElementChild.style.width = '10%';
+    requestAnimationFrame(() => { bar.firstElementChild.style.width = '80%'; });
+    try {
+      const r = await api('POST', `/projekte/${p.slug}/formelsammlung`, { eintraege });
+      bar.firstElementChild.style.width = '100%';
+      ergebnis(r, p.slug);
+      toast('PDF erstellt');
+    } catch (err) { schmutzig = true; toast(err.message, true); }
+    bar.hidden = true; bar.firstElementChild.style.width = '0';
+    btn.disabled = false; btn.textContent = 'PDF erstellen';
+  };
+  zeige();
+  typeset(ziel);
+}
+
 async function tabExport(p, ziel) {
   const info = (await kiLaden()).pages ? await api('GET', `/projekte/${p.slug}/pages`) : null;
   ziel.innerHTML = `<div class="eng raster">
     <div class="karte"><h2>Herunterladen</h2><p>Eine einzige HTML-Datei, funktioniert offline – per WhatsApp, Mail oder USB-Stick teilbar.</p>
-      ${p.hat_seite ? `<a class="btn primary" href="/api/projekte/${p.slug}/download">${esc(p.slug)}.html herunterladen</a>` : '<p class="leer">Noch keine Seite gebaut.</p>'}</div>
+      ${p.hat_seite ? `<a class="btn primary" id="dlLink" href="/api/projekte/${p.slug}/download">${esc(p.slug)}.html herunterladen</a><div data-bereich="export-herunterladen"></div>` : '<p class="leer">Noch keine Seite gebaut.</p>'}</div>
     ${info ? `<div class="karte"><h2>Auf GitHub Pages veröffentlichen</h2>
       ${info.ok ? `<p>Ziel: <code>${esc(info.repo)}</code> → <a href="${esc(info.url)}" target="_blank" rel="noopener">${esc(info.url)}</a></p>
         ${info.status.veroeffentlicht ? `<p><span class="chip ok">online</span> zuletzt ${new Date(info.status.zuletzt).toLocaleString('de-AT')}</p>` : ''}
         <button class="btn primary" id="pub" ${p.hat_seite ? '' : 'disabled'}>Veröffentlichen …</button>`
       : `<p class="muted">${esc(info.fehler)}</p><p class="klein">Einrichtung: öffentliches Repo <code>lernseiten</code> anlegen, lokal klonen, GitHub Pages auf Branch <code>main</code> / Ordner <code>/</code> aktivieren und <code>repo_pfad</code> sowie <code>basis_url</code> in <code>config.toml</code> eintragen. Danach Server neu starten.</p>`}
       <div id="pubErg"></div></div>` : ''}</div>`;
+  if (p.hat_seite) bereichFuellen('export-herunterladen', $('[data-bereich="export-herunterladen"]', ziel), { p, link: $('#dlLink', ziel) });
   const pub = $('#pub');
   if (pub) pub.onclick = async () => {
     const ok = await frage('Wirklich veröffentlichen?', `<p>Die Seite wird öffentlich unter<br><a href="${esc(info.url)}">${esc(info.url)}</a> erreichbar sein.</p>

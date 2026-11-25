@@ -11,3 +11,4 @@ config.toml
 start.sh
 start.command
 start.bat
+config.toml.bak

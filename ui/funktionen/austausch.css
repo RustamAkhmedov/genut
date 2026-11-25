@@ -1,0 +1,14 @@
+/* Projekt-Austausch (Feature 007). Farben nur über die Variablen aus ui/app.css (hell und dunkel). */
+
+/* Export: Haken in der Karte „Herunterladen“ */
+.at-export{margin-top:12px}
+.at-haken{display:flex;align-items:flex-start;gap:8px;min-height:40px;padding:8px 0;cursor:pointer;font-weight:600;font-size:.9rem}
+.at-haken input{flex:none;width:18px;height:18px;margin:2px 0 0;accent-color:var(--accent)}
+.at-haken span{min-width:0}
+.at-export p{margin:0}
+
+/* Import: Markierung beim Ziehen einer Datei auf die Projektliste (outline verschiebt nichts) */
+.at-ziel{outline:2px dashed var(--accent);outline-offset:6px;border-radius:var(--r);background:var(--accent-soft)}
+
+/* Herkunft im Fotos-Schritt */
+.at-hinweis{margin-bottom:12px;font-size:.9rem;overflow-wrap:anywhere}

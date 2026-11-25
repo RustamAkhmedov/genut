@@ -1,0 +1,30 @@
+{
+  "begruendung": "Die zweite Normalform haben Sie vollständig und mit eigenen Worten erklärt. Bei `GROUP BY` war das Zusammenfassen der Zeilen klar, aber den Unterschied zwischen `WHERE` und `HAVING` haben Sie auch nach der Nachfrage nicht sicher getroffen. Zu den Anomalien in nicht normalisierten Tabellen konnten Sie nichts sagen. Wiederholen Sie diese beiden Punkte, dann sitzt das Thema Datenbankentwurf deutlich besser.",
+  "luecken": [
+    {
+      "thema_id": "t-e0000001",
+      "hinweis": "Wiederholen Sie, dass `WHERE` einzelne Zeilen vor dem Gruppieren filtert und `HAVING` die Gruppen danach, und welche Spalten im `SELECT` stehen dürfen."
+    },
+    {
+      "thema_id": "t-e0000002",
+      "hinweis": "Wiederholen Sie die Einfüge-, Änderungs- und Löschanomalie und warum Redundanz sie verursacht."
+    }
+  ],
+  "rueckmeldungen": [
+    {
+      "nr": 1,
+      "fehlte": "Sie wollten die Gruppen mit `WHERE` filtern, und die Regel für die Spalten im `SELECT` fehlte.",
+      "stoff_hinweis": "`WHERE` filtert Zeilen vor dem Gruppieren, `HAVING` filtert Gruppen danach, z. B. `HAVING COUNT(*) > 20`. Im `SELECT` stehen nur Gruppierungsspalten oder Aggregatfunktionen."
+    },
+    {
+      "nr": 2,
+      "fehlte": "Nichts Wesentliches.",
+      "stoff_hinweis": "2. Normalform: 1. Normalform und jedes Nichtschlüsselattribut hängt vom ganzen Primärschlüssel ab; teilweise abhängige Attribute kommen in eine eigene Tabelle."
+    },
+    {
+      "nr": 3,
+      "fehlte": "Es wurde keine der drei Anomalien genannt.",
+      "stoff_hinweis": "Redundante Kundendaten führen zu Änderungsanomalien (widersprüchliche Adressen), Einfügeanomalien (Kunde ohne Bestellung nicht speicherbar) und Löschanomalien (Kundendaten weg mit der letzten Bestellung)."
+    }
+  ]
+}

@@ -15,8 +15,13 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ValidationError
 
 from . import faecher
+from . import formelsammlung
+from . import funktionen
 from . import export
-from .config import WURZEL, config_pfad, laden
+from . import gruppen
+from . import projektliste
+from . import themen as themen_umfang
+from .config import WURZEL, config_pfad, laden, wert_setzen
 from .modelle.base import ModellFehler, waehlen
 from .patch import finden, ids_vergeben, loeschen
 from .pipeline import Pipeline, fotos_hinzufuegen
@@ -27,6 +32,7 @@ from .schema import Dokument, Einstellungen, ProjektMeta
 
 app = FastAPI(title="gen_Ut", docs_url="/api/docs", redoc_url=None)
 UI = WURZEL / "ui"
+UI_STAND = 3  # steht auch in ui/index.html; nur nötig, um einmal alte Einträge im Browser-Cache zu umgehen
 MATHJAX = WURZEL / "node_modules" / "mathjax-full" / "es5" / "tex-svg-full.js"
 
 
@@ -106,10 +112,33 @@ JOBS = Jobs()
 
 @app.get("/")
 def start():
-    return RedirectResponse("/ui/")
+    return RedirectResponse(f"/ui/?v={UI_STAND}")
 
 
-app.mount("/ui", StaticFiles(directory=UI, html=True), name="ui")
+funktionen.einhaengen_alle(app)  # Module vor den statischen Routen
+
+
+@app.get("/api/projekte/{slug}/themen")
+def projekt_themen(slug: str):
+    """Themen mit Umfang (gemeinsam für Lernplaner und Prüfung, unabhängig vom Funktionsschalter)."""
+    p = projekt(slug)
+    if not p.hat_inhalt():
+        return []
+    doc = p.inhalt()
+    return [{"id": t.id, "titel": t.titel, "kurz": t.kurz, "umfang": themen_umfang.last(t, doc)} for t in doc.themen]
+
+
+class _Oberflaeche(StaticFiles):
+    """Nach einem Update darf der Browser keine alte Datei ungeprüft weiterverwenden (eine alte index.html zum
+    neuen app.js zeigte eine leere Projektliste). Ohne Änderung bleibt es bei einem kurzen 304."""
+
+    def file_response(self, *args, **kwargs):
+        antwort = super().file_response(*args, **kwargs)
+        antwort.headers["Cache-Control"] = "no-cache"
+        return antwort
+
+
+app.mount("/ui", _Oberflaeche(directory=UI, html=True), name="ui")
 
 
 MERMAID = WURZEL / "node_modules" / "mermaid" / "dist" / "mermaid.min.js"
@@ -181,6 +210,78 @@ def neu_bauen(slug: str):
     return Pipeline(p).bauen()
 
 
+# ---------------------------------------------------------------- Formelsammlung
+
+class FormelEintraege(BaseModel):
+    eintraege: list[formelsammlung.AuswahlEintrag] = []
+
+
+def _formel_fehler(e: Exception) -> HTTPException:
+    if isinstance(e, formelsammlung.UnbekannteFormel):
+        return HTTPException(400, f"Unbekannte Formel: {e}. Es gibt keinen Formel-Block mit dieser Kennung.")
+    if isinstance(e, formelsammlung.KeineFormelGewaehlt):
+        return HTTPException(400, "Keine Formel gewählt. Wähle mindestens eine Formel aus.")
+    if isinstance(e, formelsammlung.ErstellungLaeuft):
+        return HTTPException(409, "Die Formelsammlung wird für dieses Projekt gerade erstellt.")
+    return HTTPException(500, f"PDF konnte nicht erstellt werden: {e}")
+
+
+@app.get("/api/projekte/{slug}/formeln")
+def formeln_liste(slug: str):
+    p = projekt(slug)
+    if not p.hat_inhalt():
+        return {"themen": [], "auswahl": [], "pdf": None}
+    themen: dict[str, dict] = {}
+    alle = formelsammlung.formeln(p.inhalt())
+    vorhanden = {f["id"] for f in alle}  # gelöschte Formeln stehen nicht mehr in der Auswahl
+    for f in alle:
+        t = themen.setdefault(f["thema_id"], {"id": f["thema_id"], "titel": f["thema"], "formeln": []})
+        t["formeln"].append({
+            "id": f["id"], "titel": f["titel"], "tex": f["tex"], "variablen": f["variablen"],
+            "hat_erklaerung": bool((f["erklaerung_md"] or "").strip()), "erklaerung_md": f["erklaerung_md"],
+            "spick": f["spick"], "pruefung": f["pruefung"],
+        })
+    a = formelsammlung.auswahl_laden(p)
+    return {"themen": list(themen.values()),
+            "auswahl": [e.model_dump() for e in a.eintraege if e.block_id in vorhanden],
+            "pdf": formelsammlung.pdf_info(p)}
+
+
+@app.put("/api/projekte/{slug}/formelauswahl")
+def formelauswahl_speichern(slug: str, daten: FormelEintraege):
+    p = projekt(slug)
+    if not p.hat_inhalt():
+        raise HTTPException(400, "Noch kein Inhalt")
+    try:
+        a = formelsammlung.auswahl_speichern(p, daten.eintraege)
+    except formelsammlung.UnbekannteFormel as e:
+        raise _formel_fehler(e)
+    return {"ok": True, "gespeichert": len(a.eintraege)}
+
+
+@app.post("/api/projekte/{slug}/formelsammlung")
+async def formelsammlung_erstellen(slug: str, daten: FormelEintraege | None = None):
+    p = projekt(slug)
+    if not p.hat_inhalt():
+        raise HTTPException(400, "Noch kein Inhalt")
+    eintraege = daten.eintraege if daten is not None else None
+    try:
+        return await asyncio.to_thread(formelsammlung.erzeugen, p, eintraege)
+    except (formelsammlung.UnbekannteFormel, formelsammlung.KeineFormelGewaehlt,
+            formelsammlung.ErstellungLaeuft, formelsammlung.PdfFehler) as e:
+        raise _formel_fehler(e)
+
+
+@app.get("/api/projekte/{slug}/formelsammlung.pdf")
+def formelsammlung_pdf(slug: str):
+    p = projekt(slug)
+    pfad = formelsammlung.pdf_pfad(p)
+    if not pfad.exists():
+        raise HTTPException(404, "Die Formelsammlung wurde noch nicht erstellt")
+    return FileResponse(pfad, media_type="application/pdf", filename=f"formelsammlung-{slug}.pdf",
+                        content_disposition_type="attachment")
+
+
 @app.get("/mathjax.js")
 def mathjax():
     if not MATHJAX.exists():
@@ -197,9 +298,69 @@ class NeuesProjekt(BaseModel):
     einstellungen: Einstellungen = Einstellungen()
 
 
+class GruppeDaten(BaseModel):
+    name: str
+
+
+def _gruppe_antwort(g: dict) -> dict:
+    anzahl = 0
+    for p in Projekt.alle():
+        try:
+            if p.meta().gruppe == g["id"]:
+                anzahl += 1
+        except Exception:
+            continue
+    return {"id": str(g["id"]), "name": str(g["name"]), "anzahl": anzahl}
+
+
+def _gruppe_fehler(e: Exception) -> HTTPException:
+    if isinstance(e, gruppen.NameFehler):
+        return HTTPException(400, str(e))
+    if isinstance(e, gruppen.NameVergeben):
+        return HTTPException(409, "Eine Gruppe mit diesem Namen gibt es schon.")
+    return HTTPException(404, "Gruppe nicht gefunden")
+
+
+@app.get("/api/gruppen")
+def gruppen_liste():
+    return sorted((_gruppe_antwort(g) for g in gruppen.laden()), key=lambda g: g["name"].casefold())
+
+
+@app.post("/api/gruppen")
+def gruppe_neu(daten: GruppeDaten):
+    try:
+        return _gruppe_antwort(gruppen.anlegen(daten.name))
+    except (gruppen.NameFehler, gruppen.NameVergeben) as e:
+        raise _gruppe_fehler(e)
+
+
+@app.patch("/api/gruppen/{id_}")
+def gruppe_aendern(id_: str, daten: GruppeDaten):
+    try:
+        return _gruppe_antwort(gruppen.umbenennen(id_, daten.name))
+    except (gruppen.NameFehler, gruppen.NameVergeben, gruppen.GruppeUnbekannt) as e:
+        raise _gruppe_fehler(e)
+
+
+@app.delete("/api/gruppen/{id_}")
+def gruppe_loeschen(id_: str):
+    try:
+        return {"ok": True, "verschoben": gruppen.loeschen(id_)}
+    except gruppen.GruppeUnbekannt as e:
+        raise _gruppe_fehler(e)
+
+
 @app.get("/api/projekte")
 def projekte():
     return [uebersicht(p) for p in Projekt.alle()]
+
+
+@app.get("/api/projektliste")
+def projektliste_abfrage(modus: str = "gruppen", sortierung: str = "gebaut"):
+    try:
+        return {"abschnitte": projektliste.abschnitte([uebersicht(p) for p in Projekt.alle()], modus, sortierung)}
+    except ValueError:
+        raise HTTPException(400, "Ungültiger Modus oder ungültige Sortierung")
 
 
 @app.post("/api/projekte")
@@ -222,6 +383,7 @@ class ProjektAenderung(BaseModel):
     name: str | None = None
     modell: str | None = None
     einstellungen: Einstellungen | None = None
+    gruppe: str | None = None  # "" = lösen, None = nicht ändern
 
 
 @app.patch("/api/projekte/{slug}")
@@ -230,6 +392,11 @@ def projekt_aendern(slug: str, daten: ProjektAenderung):
     m = p.meta()
     roh = m.model_dump()
     for k, v in daten.model_dump(exclude_none=True).items():
+        if k == "gruppe":
+            if v == "":
+                v = None
+            elif not gruppen.existiert(v):
+                raise HTTPException(400, "Unbekannte Gruppe")
         roh[k] = v
     try:
         p.meta_speichern(ProjektMeta.model_validate(roh))
@@ -573,21 +740,21 @@ def ki_status():
     from .modelle.gemini import schluessel
     cfg = laden()
     return {"standard": cfg["modell"]["standard"], "auswahl": list(cfg["modell"].get("auswahl") or [cfg["modell"]["standard"]]),
-            "gemini_schluessel": bool(schluessel()), "pages": bool(cfg["pages"].get("aktiv"))}
+            "gemini_schluessel": bool(schluessel()), "pages": bool(cfg["pages"].get("aktiv")),
+            "funktionen": dict(cfg["funktionen"]), "module": funktionen.aktive(cfg)}
+
+
+KI_NAMEN = {"claude_code": "Claude", "gemini": "Gemini", "ollama": "Lokal"}
 
 
 @app.put("/api/ki")
 def ki_setzen(daten: StandardModell):
     """Standard-Modell für neue Projekte in config.toml schreiben (nur die Zeile im Abschnitt [modell])."""
-    if daten.standard not in ("claude_code", "gemini", "ollama"):
+    if daten.standard not in KI_NAMEN:
         raise HTTPException(400, f"unbekanntes Modell {daten.standard!r}")
-    pfad = config_pfad()
-    text = pfad.read_text(encoding="utf-8") if pfad.exists() else ""
-    neu, n = re.subn(r'(?ms)(^\[modell\][^\[]*?^standard\s*=\s*)"[^"]*"', rf'\g<1>"{daten.standard}"', text, count=1)
-    if not n:
-        neu = text.rstrip() + f'\n\n[modell]\nstandard = "{daten.standard}"\n'
-    pfad.write_text(neu, encoding="utf-8")
-    laden.cache_clear()
+    if funktionen.ki_bereit(daten.standard) is False:  # None = unbekannt (ohne Modul ki_einrichtung)
+        raise HTTPException(400, f"{KI_NAMEN[daten.standard]} ist nicht eingerichtet")
+    wert_setzen("modell", "standard", daten.standard)
     return ki_status()
 
 

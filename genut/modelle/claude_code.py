@@ -7,6 +7,8 @@ Bilder werden nicht angehängt, sondern per absolutem Pfad genannt und mit dem R
 from __future__ import annotations
 
 import json
+import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -15,11 +17,22 @@ from .base import ModellFehler, bild_hinweis_einsetzen, json_aus_text
 TIMEOUT = 900
 
 
+def _befehl_finden(befehl: str) -> str:
+    """Gibt es `befehl` nicht, dann `claude` im Suchpfad, sonst der Ort des offiziellen Installers
+    (~/.local/bin): dieselbe Reihenfolge wie die Erkennung (Feature 005b), damit „bereit“ auch stimmt."""
+    if shutil.which(befehl):
+        return befehl
+    if befehl != "claude" and shutil.which("claude"):
+        return "claude"
+    lokal = Path.home() / ".local" / "bin" / ("claude.exe" if os.name == "nt" else "claude")
+    return str(lokal) if lokal.is_file() else befehl
+
+
 class ClaudeCode:
     name = "claude_code"
 
     def __init__(self, cfg: dict):
-        self.befehl = cfg.get("befehl") or "claude"
+        self.befehl = _befehl_finden(cfg.get("befehl") or "claude")
         self.modell = cfg.get("modell") or ""
 
     def _hinweis(self, bilder: list[Path]) -> str:

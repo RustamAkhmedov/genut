@@ -390,7 +390,7 @@ FACH = Literal["mathe", "physik", "chemie", "pos", "wmc", "dsai", "dbi", "nscs",
 
 
 def _fach_alt(v):
-    return {"netzwerk": "nscs"}.get(v, v)
+    return {"netzwerk": "nscs"}.get(v, v) if isinstance(v, str) else v
 
 
 FachFeld = Annotated[FACH, BeforeValidator(_fach_alt)]
@@ -539,6 +539,7 @@ class ProjektMeta(_M):
     fotos: list[FotoEintrag] = []
     pages: PagesStatus = PagesStatus()
     letzter_build: str | None = None
+    gruppe: str | None = None
 
     @field_validator("modell", mode="before")
     @classmethod

@@ -1,0 +1,34 @@
+{
+  "fragen": [
+    {
+      "thema_id": "t-e0000001",
+      "frage": "Erklären Sie, wozu man `GROUP BY` in einer SQL-Abfrage verwendet und wie man die gebildeten Gruppen anschließend nach einer Bedingung filtern kann.",
+      "erwartung": [
+        "`GROUP BY` fasst alle Zeilen mit gleichem Wert in den Gruppierungsspalten zu je einer Ergebniszeile zusammen",
+        "Aggregatfunktionen (`COUNT`, `SUM`, `AVG`, `MIN`, `MAX`) werden je Gruppe berechnet",
+        "Im `SELECT` stehen nur Spalten aus dem `GROUP BY` oder Aggregatfunktionen",
+        "`HAVING` filtert die Gruppen nach dem Gruppieren, `WHERE` filtert die einzelnen Zeilen davor"
+      ]
+    },
+    {
+      "thema_id": "t-e0000002",
+      "frage": "Wann ist eine Tabelle in der zweiten Normalform, und wie gehen Sie vor, wenn eine Tabelle sie verletzt?",
+      "erwartung": [
+        "Voraussetzung ist die erste Normalform (nur atomare Werte)",
+        "Jedes Nichtschlüsselattribut hängt vom ganzen Primärschlüssel ab, nicht nur von einem Teil davon",
+        "Eine Verletzung ist nur bei einem zusammengesetzten Primärschlüssel möglich",
+        "Teilweise abhängige Attribute kommen mit ihrem Schlüsselteil in eine eigene Tabelle"
+      ]
+    },
+    {
+      "thema_id": "t-e0000002",
+      "frage": "Eine Tabelle speichert zu jeder Bestellung auch Name und Adresse des Kunden. Welche Probleme können dabei beim Einfügen, Ändern und Löschen von Daten entstehen?",
+      "erwartung": [
+        "Ursache ist Redundanz: Kundendaten stehen mehrfach in der Tabelle",
+        "Änderungsanomalie: Eine geänderte Adresse muss in allen Zeilen geändert werden, sonst sind die Daten widersprüchlich",
+        "Einfügeanomalie: Ein Kunde ohne Bestellung kann nicht gespeichert werden",
+        "Löschanomalie: Mit der letzten Bestellung gehen auch die Kundendaten verloren"
+      ]
+    }
+  ]
+}

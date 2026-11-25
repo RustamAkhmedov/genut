@@ -72,7 +72,7 @@ def test_pages_in_oeffentlichen_versionen_aus(projekt_mit_inhalt, monkeypatch, t
     from genut.config import laden
     from genut.server import app
 
-    for version in ("claude", "gemini", "lokal"):
+    for version in ("genut",):
         _config(monkeypatch, tmp_path, (Path(__file__).parent.parent / "versionen" / f"{version}.toml").read_text(encoding="utf-8"))
         try:
             c = TestClient(app)

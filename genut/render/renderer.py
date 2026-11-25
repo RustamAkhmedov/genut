@@ -237,7 +237,8 @@ def html_bauen(doc: Dokument, fotos: Path | None, slug: str, diagramme: Path | N
     quiz = [q for q in doc.quiz if (q.art == "mc" and len(q.optionen) >= 2 and q.richtig is not None
                                     and 0 <= q.richtig < len(q.optionen)) or (q.art == "wahrfalsch" and q.wahr is not None)]
     daten["quiz"] = [q.id for q in quiz]
-    daten_json = json.dumps(daten, ensure_ascii=False).replace("</", "<\\/")
+    # Ohne jedes "<": Sonst könnte Text wie "<!--<script>" den Rest der Seite verschlucken
+    daten_json = json.dumps(daten, ensure_ascii=False).replace("<", "\\u003c")
     return _env().get_template("seite.html.j2").render(
         doc=doc, p=doc.projekt, themen=doc.themen, thema=themen, aufgaben=doc.aufgaben, karten=doc.karten,
         spick=spick, graphen=graphen, bild=bild, daten_json=Markup(daten_json), quiz=quiz, vokabeln=vokabeln,

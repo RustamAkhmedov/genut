@@ -1,0 +1,6 @@
+{
+  "aktion": "nachfrage",
+  "text": "Angenommen, Sie wollen nur die Klassen ausgeben, in denen mehr als 20 Schüler sind. Wie formulieren Sie diese Bedingung, und an welcher Stelle der Abfrage steht sie?",
+  "punkte": null,
+  "anmerkung": "Zusammenfassen von Zeilen und COUNT je Gruppe richtig. Filtern der Gruppen fälschlich mit WHERE, Regel für Spalten im SELECT fehlt."
+}

@@ -63,3 +63,20 @@ def test_tex_sonderzeichen_nicht_doppelt_escaped():
     h = html_bauen(doc, None, "t")
     assert "&amp;lt;" not in h and "&amp;gt;" not in h and "&amp;amp;" not in h
     assert "a &lt; b" in h and "1 &amp; 2" in h and "-&gt; 2H2O" in h
+
+
+def test_datenblock_der_seite_ohne_kleiner_zeichen(doc):
+    import json
+    import re
+
+    from genut.render.renderer import html_bauen
+    from genut.schema import GraphBlock
+
+    g = next(b for t in doc.themen for b in t.bloecke if isinstance(b, GraphBlock))
+    g.graph.funktionen[0].label = "<!--<script>"
+    for f in g.graph.funktionen:
+        f.ausdruck_js = "x"
+    html = html_bauen(doc, None, "test", None)
+    block = re.search(r'id="genutDaten"[^>]*>(.*?)</script>', html, re.S).group(1)
+    assert "<" not in block
+    assert "<!--<script>" in json.dumps(json.loads(block), ensure_ascii=False)

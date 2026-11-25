@@ -65,6 +65,9 @@ def _serve(args):
 
 
 def main(argv=None):
+    from . import funktionen
+    from .config import laden
+
     ap = argparse.ArgumentParser(prog="genut")
     sub = ap.add_subparsers(dest="cmd", required=True)
     s = sub.add_parser("serve")
@@ -80,6 +83,7 @@ def main(argv=None):
     n.add_argument("name")
     n.add_argument("fotos", nargs="+")
     n.set_defaults(fn=_neu)
+    funktionen.befehle_eintragen(sub, laden())
     args = ap.parse_args(argv)
     args.fn(args)
 

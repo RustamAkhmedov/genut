@@ -10,7 +10,7 @@ Heraus kommt **eine einzige HTML-Datei**. Sie funktioniert offline am Handy und 
 
 ## Inhalt
 
-1. [Die drei Versionen](#die-drei-versionen)
+1. [Die drei KIs](#die-drei-kis)
 2. [Installation](#installation)
 3. [Starten](#starten)
 4. [So benutzt du gen_Ut](#so-benutzt-du-gen_ut)
@@ -25,9 +25,9 @@ Heraus kommt **eine einzige HTML-Datei**. Sie funktioniert offline am Handy und 
 
 ---
 
-## Die drei Versionen
+## Die drei KIs
 
-gen_Ut ist überall dasselbe Programm. Die Versionen unterscheiden sich nur darin, welche KI standardmäßig arbeitet. Das steht in einer Konfigurationsdatei im Ordner [`versionen/`](versionen/).
+gen_Ut ist ein Programm mit allen drei KIs. Du wählst im Schalter oben, welche KI ein Projekt bearbeitet, und welche KI neue Projekte bekommen.
 
 | | **Claude** | **Gemini** | **Lokal** |
 |---|---|---|---|
@@ -37,7 +37,6 @@ gen_Ut ist überall dasselbe Programm. Die Versionen unterscheiden sich nur dari
 | Tempo pro Lernseite | ca. 3–10 Minuten | ca. 2 Minuten | je nach Computer deutlich länger |
 | Grenze | Nutzungslimit deines Abos | ca. 20 Anfragen pro Tag und Modell (siehe unten) | keine |
 | Daten | gehen an Anthropic | gehen an Google | bleiben auf deinem Computer |
-| Datei | `versionen/claude.toml` | `versionen/gemini.toml` | `versionen/lokal.toml` |
 
 **Was bedeutet „20 Anfragen pro Tag“ bei Gemini?** Eine Lernseite aus Dateien (docx, pdf, pptx …) braucht meist **1 Anfrage**. Aus Fotos kommt **1 Anfrage pro Foto** fürs Abschreiben dazu. Liefert die KI weniger Quizfragen, Karteikarten oder Probeaufgaben als eingestellt, fordert gen_Ut **einmal** gezielt nach (1 Anfrage mehr). gen_Ut wechselt automatisch zum nächsten Gemini-Modell, wenn eines überlastet ist oder sein Tageslimit erreicht hat. Realistisch sind damit etwa **10–20 Lernseiten aus Dateien** oder **5–10 aus Foto-Sätzen** pro Tag möglich.
 
@@ -49,19 +48,13 @@ gen_Ut ist überall dasselbe Programm. Die Versionen unterscheiden sich nur dari
 
 ## Installation
 
-Am einfachsten geht es mit dem **Setup-Skript**. Es richtet alles ein und fragt vor jeder Installation nach. Admin-Rechte braucht es nicht, nur die lokale Version unter Linux fragt für Ollama nach dem Passwort.
+Am einfachsten geht es mit dem **Setup-Skript**. Es richtet alles ein und fragt vor jeder Installation nach. Claude und Gemini brauchen keine Admin-Rechte. Nur Ollama (Lokal) fragt unter Linux nach dem Passwort.
 
 ### 1. gen_Ut herunterladen
 
-Unter [**Releases**](https://github.com/RustamAkhmedov/genut/releases/latest) das Zip deiner Version herunterladen und entpacken:
+Unter [**Releases**](https://github.com/RustamAkhmedov/genut/releases/latest) das Zip `genut-v<Nummer>.zip` herunterladen und entpacken. Es enthält alle drei KIs.
 
-| Zip | Version |
-|---|---|
-| `genut-claude.zip` | Claude |
-| `genut-gemini.zip` | Gemini |
-| `genut-lokal.zip` | Lokal (experimentell) |
-
-Oder mit git (dann fragt dich das Setup nach der Version):
+Oder mit git:
 
 ```bash
 git clone https://github.com/RustamAkhmedov/genut.git
@@ -82,15 +75,19 @@ git clone https://github.com/RustamAkhmedov/genut.git
 ### 3. Was das Setup macht
 
 1. **Python 3.11+:** Ist es nicht vorhanden, lädt das Setup es nach Rückfrage über [uv](https://docs.astral.sh/uv/) in deinen Benutzerordner. Dann legt es eine eigene Python-Umgebung `.venv` an und installiert die Pakete.
-2. **Node.js 20+:** Fehlt es, lädt das Setup nach Rückfrage eine eigene Kopie in den Ordner `.werkzeuge/`. Dann installiert es MathJax, Mermaid und sql.js.
-3. **`config.toml`** für deine Version anlegen.
-4. **KI einrichten:**
+2. **Node.js 20+:** Fehlt es, lädt das Setup nach Rückfrage eine eigene Kopie in den Ordner `.werkzeuge/`. Dann installiert es MathJax, Mermaid, sql.js und die PDF-Bausteine (PDFKit).
+3. **`config.toml`** anlegen (aus `versionen/genut.toml`).
+4. **KI einrichten** (jede lässt sich überspringen und später über den Schalter nachholen):
    - **Claude:** Claude Code installieren (offizieller Installer), unter Windows bei Bedarf auch Git. Danach meldest du dich einmal mit deinem Claude-Konto an.
    - **Gemini:** Das Setup öffnet https://aistudio.google.com/apikey. Dort holst du dir gratis einen Schlüssel und fügst ihn ein. Er landet in der Datei `.env` und bleibt auf deinem Computer.
-   - **Lokal:** Ollama installieren und das Modell `gemma3:4b` herunterladen (ca. 3 GB).
+   - **Lokal:** Ollama installieren und ein Modell herunterladen. Das Setup schlägt dir drei Modelle vor und sagt dazu, wie gut sie auf deinem Rechner laufen.
 5. **Startbefehl anlegen:** `start.bat` (Windows, auf Wunsch mit Desktop-Verknüpfung) bzw. `start.sh` (unter macOS zusätzlich `start.command` zum Doppelklicken).
 
-Das Setup kannst du jederzeit nochmal starten. Es erkennt, was schon da ist, und kann auch die Version wechseln (`./setup.sh --version claude`, unter Windows `setup.bat -Version claude`). Mit `--ja` (Windows: `-Ja`) beantwortet es alle Rückfragen mit „ja“.
+Das Setup kannst du jederzeit nochmal starten. Es erkennt, was schon da ist. Mit `./setup.sh --nur claude` (Windows: `setup.bat -Nur claude`) holst du nur eine KI nach, `--nur gemini` und `--nur lokal` gehen genauso. Die Standard-KI legst du mit `--standard claude|gemini|lokal` fest (Windows: `-Standard`). Mit `--ja` (Windows: `-Ja`) beantwortet es die Rückfragen zu Python und Node.js mit „ja“. Claude und Ollama installiert es damit nur zusammen mit `--nur claude` bzw. `--nur lokal`. Alle Schalter zeigt `./setup.sh --hilfe`.
+
+### Umstieg von v0.2.0
+
+Wer noch die alte Gemini-Version (v0.2.0) nutzt, lädt das neue Zip und lässt das Setup laufen. Projekte, `.env` mit dem Gemini-Schlüssel und die Standard-KI bleiben dabei erhalten. Das Setup ergänzt die Liste der KIs und sichert die bisherige `config.toml` als `config.toml.bak`.
 
 <details>
 <summary><b>Ohne Setup-Skript (von Hand)</b></summary>
@@ -101,7 +98,7 @@ Voraussetzungen: Python 3.11+ und Node.js 20+.
 python3 -m venv .venv
 .venv/bin/pip install -e .          # Windows: .venv\Scripts\pip install -e .
 npm ci
-cp versionen/gemini.toml config.toml   # oder claude.toml / lokal.toml (Windows: copy)
+cp versionen/genut.toml config.toml   # Windows: copy
 ```
 
 Dann die KI einrichten:
@@ -129,6 +126,8 @@ gen_Ut ist nur auf deinem eigenen Computer erreichbar, nicht im Netzwerk.
 ## So benutzt du gen_Ut
 
 Ein Projekt durchläuft fünf Schritte. Oben im Projekt siehst du, wo du gerade bist.
+
+Auf der Projektübersicht kannst du eigene Gruppen anlegen und jedem Projekt eine davon zuordnen. Die Liste lässt sich nach Gruppe oder nach Fach gruppieren und nach Name, zuletzt gebaut oder Fach sortieren.
 
 ### 1. Projekt anlegen
 
@@ -186,6 +185,16 @@ Diagramme (UML, ER, Gantt …) werden beim ersten Öffnen der Vorschau gezeichne
 
 Unter **Export → Herunterladen** bekommst du die fertige HTML-Datei. Mehr braucht es nicht: Datei aufs Handy schicken, öffnen, lernen.
 
+### Projekte mit Freunden teilen
+
+Im Schritt **Export** ist beim Herunterladen der Haken **„Zum Importieren für Freunde (mit Projektdaten)“** schon gesetzt. Dein Freund klickt in der Projektliste auf **Projekt importieren** oder zieht die Datei auf die Liste. Es entsteht immer ein neues Projekt, und die prüfbaren Inhalte werden auf seinem Rechner neu geprüft. Die Original-Fotos bleiben bei dir.
+
+Die Datei funktioniert auch ohne gen_Ut als normale Lernseite, du kannst sie also genauso verschicken wie jede andere Lernseite.
+
+### Formelsammlung als PDF
+
+Öffne das Projekt, wechsle zum Schritt **Formelsammlung**, wähle die gewünschten Formeln aus und klicke auf **PDF erstellen**. Das PDF ist A4, hat zwei Spalten und ist schwarz-weiß; bei jeder Formel kannst du optional die Variablen und eine Erklärung mit ausdrucken lassen. Die dafür nötigen Node-Pakete werden beim Setup mitinstalliert.
+
 ---
 
 ## Die fertige Lernseite
@@ -202,6 +211,28 @@ Unter **Export → Herunterladen** bekommst du die fertige HTML-Datei. Mehr brau
 Dein Fortschritt (gelesen, gewusst, Quiz) wird im Browser gespeichert und überlebt ein Neuladen. Die Seite lädt nichts aus dem Internet nach.
 
 Blöcke mit **KI**-Abzeichen hat die KI ergänzt, alles andere stammt aus deinen Unterlagen. **✓ geprüft** heißt: vom Programm nachgerechnet.
+
+---
+
+## Lernplan
+
+Der Lernplan verteilt die Themen eines Projekts auf die Lerntage bis zu deinem Prüfungstermin, an den Wochentagen, die du wählst. Das Programm rechnet die Verteilung ohne KI aus, und große Themen teilt es dabei an den Grenzen ihrer Einheiten. Erledigtes hakst du im Plan ab, und mit **Neu verteilen** legt das Programm die offenen Themen auf die restlichen Tage.
+
+Den Lernplaner schaltest du in `config.toml` unter `[funktionen]` mit `lernplan = true` ein bzw. mit `lernplan = false` aus.
+
+---
+
+## Mündliche Prüfung
+
+Im Projekt simuliert eine KI eine mündliche Prüfung: Du wählst die Themen per Checkliste, dann stellt dir die KI 3 bis 12 Hauptfragen (Standard 6) und darf pro Frage eine Nachfrage stellen. Am Ende gibt es eine Note von 1 bis 5 mit Begründung, eine Lückenliste mit Links zur Lernseite, und das Ergebnis bleibt im Projekt gespeichert.
+
+Die Prüfung erscheint, sobald Claude eingerichtet ist (die Claude-CLI wird erkannt).
+
+Jeder Schritt der Prüfung verbraucht dein Claude-Kontingent im Abo. Eine Prüfung mit 6 Fragen braucht rund 8 Aufrufe, also setzt du sie gezielt ein.
+
+Antworten kannst du tippen oder mit dem Mikrofon sprechen. Das Mikrofon gibt es nur in Browsern mit Spracherkennung (Chrome, Edge). Dabei kann der Browser die Sprache an Dritte wie Google oder Microsoft schicken. Vor dem ersten Gebrauch zeigt das Programm dir diesen Hinweis.
+
+**Ein- und ausschalten:** In `config.toml` steht unter `[funktionen]` `pruefung = "auto"`. Mit `true` schaltest du die Prüfung fest ein, mit `false` fest aus.
 
 ---
 
@@ -231,7 +262,7 @@ Oben rechts im Tool ist der **KI-Schalter**, z. B. **Claude | Gemini**:
 - **Auf der Projektübersicht** legt er fest, welche KI neue Projekte bekommen.
 - **In einem Projekt** stellt er zusätzlich die KI dieses Projekts um.
 
-Welche KIs im Schalter auftauchen, steht in `config.toml` unter `[modell] auswahl`. Damit Gemini dort funktioniert, braucht es den Schlüssel in der `.env`, damit Claude funktioniert, die angemeldete Claude-CLI. Eine Verbindung testen kannst du unter **Einstellungen → Verbindung testen**.
+Der Schalter zeigt immer alle drei KIs. Eingerichtete sind normal anklickbar. Nicht eingerichtete sind grau mit einem „+“, und darauf klickst du, um sie nachträglich einzurichten. Eine KI mit Problem (z. B. ungültiger Schlüssel, Ollama läuft nicht) ist gelb markiert und nennt die Ursache. Die Liste steht in `config.toml` unter `[modell] auswahl`. Damit Gemini funktioniert, braucht es den Schlüssel in der `.env`, damit Claude funktioniert, die angemeldete Claude-CLI. Eine Verbindung testen kannst du unter **Einstellungen → Verbindung testen**.
 
 ---
 
@@ -307,7 +338,7 @@ Aufbau:
 | `genut/prompts/` | Anweisungen an die KI |
 | `node/` | MathJax-Vorberechnung (Formeln werden offline in SVG umgewandelt) |
 | `ui/` | Web-Oberfläche des Tools |
-| `versionen/` | Konfiguration der drei Versionen |
+| `versionen/` | Vorlage für `config.toml` (`genut.toml`) |
 | `setup.sh`, `setup.ps1`, `setup.bat` | Einrichtung für macOS/Linux und Windows |
 
 ---
@@ -315,3 +346,5 @@ Aufbau:
 ## Lizenz
 
 [MIT](LICENSE): Du darfst gen_Ut frei benutzen, verändern und weitergeben, auch in veränderter Form, solange der Lizenzhinweis dabei bleibt. Es gibt keine Gewährleistung.
+
+Die mitgelieferte Schrift DejaVu Sans (samt Mono) steht unter einer freien Lizenz (Bitstream-Vera-Lizenz): [`genut/render/assets/fonts/LICENSE-DejaVu.txt`](genut/render/assets/fonts/LICENSE-DejaVu.txt).

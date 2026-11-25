@@ -1,0 +1,6 @@
+{
+  "aktion": "weiter",
+  "text": null,
+  "punkte": 1,
+  "anmerkung": "In der Nachfrage HAVING COUNT(*) > 20 richtig genannt. Meint aber weiterhin, WHERE könne nach GROUP BY Gruppen filtern; Regel für Spalten im SELECT fehlt."
+}

@@ -27,3 +27,13 @@ def projekt_mit_inhalt(projekte):
     shutil.copy(FIX / "fotos" / "001.jpg", p.fotos / "001.jpg")
     p.inhalt_speichern(Dokument.model_validate_json((FIX / "inhalt.json").read_text(encoding="utf-8")))
     return p
+
+
+@pytest.fixture(autouse=True)
+def ohne_ki_quelle(monkeypatch):
+    """Kein Test fragt echte KIs ab (Constitution VII): `ki_bereit` liefert None, außer der Test
+    registriert selbst eine Fake-Quelle."""
+    import genut.server  # noqa: F401  Module vorher einhängen, sonst registriert erst der Test-Import die Quelle
+    from genut import funktionen
+
+    monkeypatch.setattr(funktionen, "_ki_quelle", None)

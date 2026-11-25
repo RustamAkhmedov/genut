@@ -419,10 +419,12 @@
     } else {
       opts = [{ html: '<p>Wahr</p>', i: 'true' }, { html: '<p>Falsch</p>', i: 'false' }];
     }
-    box.innerHTML = `<div class="qz-top"><span>${q.dataset.themaTitel || ''}</span><span>Frage ${Math.min(qIdx + 1, qQueue.length)} von ${qQueue.length}${wiederholt ? ' · Wiederholung' : ''}</span></div>
+    box.innerHTML = `<div class="qz-top"><span></span><span>Frage ${Math.min(qIdx + 1, qQueue.length)} von ${qQueue.length}${wiederholt ? ' · Wiederholung' : ''}</span></div>
       <div class="qz-frage prose">${$('.qf', q).innerHTML}</div>
       <div class="qz-opts${mc ? '' : ' qz-wf'}">${opts.map((o, k) => `<button type="button" class="qz-opt" data-i="${o.i}">${mc ? `<span class="qz-l">${'ABCD'[k] || k + 1}</span>` : ''}<div class="prose">${o.html}</div></button>`).join('')}</div>
       <div class="qz-fb" hidden></div>`;
+    // Der Titel kommt aus dem Inhalt (auch aus importierten Projekten): nie als HTML einsetzen
+    $('.qz-top span', box).textContent = q.dataset.themaTitel || '';
     $$('.qz-opt', box).forEach(b => b.addEventListener('click', () => {
       const richtigI = mc ? q.dataset.richtig : q.dataset.wahr;
       const ok = String(b.dataset.i) === String(richtigI);
